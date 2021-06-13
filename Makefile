@@ -8,7 +8,7 @@ bin/aurrasd: obj/aurrasd.o
 	gcc -g obj/aurrasd.o -o bin/aurrasd
 
 obj/aurrasd.o: src/aurrasd.c
-	gcc -Wall -g -c src/aurrasd.c obj/aurrasd.o
+	gcc -Wall -g -c src/basicOperations.c src/aurrasd.c obj/aurrasd.o
 
 bin/aurras: obj/aurras.o
 	gcc -g obj/aurras.o -o bin/aurras
@@ -22,3 +22,6 @@ clean:
 test:
 	bin/aurras samples/sample-1.mp3 tmp/sample-1.mp3
 	bin/aurras samples/sample-2.mp3 tmp/sample-2.mp3
+
+mal:
+	gcc src/basicOperations.c src/aurrasd.c 

@@ -5,53 +5,57 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
+#include "basicOperations.h"
 
 struct Filters {
-   char  ** filters; //Name of filters
-   int * availableFilters;
-   int * totalFilters;
-    int tam = 1;
+   ArrayChar filtersNames; //Name of filters
+   ArrayInt availableFilters;
+   ArrayInt totalFilters;
    //Faltam reques;
 } ;
 
 
 struct Filters* initFilter() {
     struct Filters* new = malloc(sizeof(struct Filters));
-    new->filters = malloc(sizeof(char * ) * 2);
-    new->filter[0] = NULL;
-    new->availableFilters = malloc(sizeof(int) * 2);
-    new->availableFilters[0] = NULL;
-    new->totalFilters = malloc(sizeof(int) * 2);
-    new->totalFilters[0] = NULL;
+    ArrayChar filtersNames;  
+    initArrayChar(&filtersNames, 4);
+    new->filtersNames = filtersNames  ;
+    ArrayInt availableFilters;
+    ArrayInt totalFilters;
+    initArrayInt(&availableFilters, 4);
+    initArrayInt(&totalFilters, 4);
+
+    new->availableFilters = availableFilters; 
+    new->totalFilters = totalFilters;
     return new;
 }
 
 //void addFilter(char * filter)
 
+
 int main(int argc, char *argv[]){
-    FILE * fd;
+    int fd;
     if (argc < 2) {
         perror("Insuficient argumetns");
         return -1;
     }
-    fd = fopen(argv[1], "r");
+    fd = open(argv[1], O_RDONLY);
     if (fd  == 0){
         perror("open");
         return -1;
     }
     else{
         struct Filters* all = initFilter();
-        char * line = NULL; 
-        size_t len = 0;
-        size_t read;
-        char buffer;
-
+        int numChar = 10;
+        char buffer[numChar];
+        char * final;
+        while (read(fd, &buffer, numChar) > 0)
+            final = append_strings(final, buffer);
+        
         printf("[DEBUG] Config file loaded\n");
-        while ((read = getline(&line, &len, fd)) != -1) {
-            printf("%s", line);
-        }
+            printf("%s", final);
 
+    close(fd);
     }
-    fclose(fd);
 
 }
