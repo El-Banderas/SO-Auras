@@ -4,21 +4,16 @@
 #include <stdio.h>
 #include "basicOperations.h"
 
-char * append_strings(const char * old, const char * new)
+void append_strings(char * str1, char * str2)
 {
-    // find the size of the string to allocate
-    printf("Passou \n");
-    const size_t old_len = strlen(old), new_len = strlen(new);
-    const size_t out_len = old_len + new_len + 1;
+printf("\nAqui: %s \n %s \n", str1, str2);
+    int len1 = strlen(str1);
+    int len2 = strlen(str2);
 
-    // allocate a pointer to the new string
-    char *out = malloc(out_len);
-
-    // concat both strings and return
-    memcpy(out, old, old_len);
-    memcpy(out + old_len, new, new_len + 1);
-
-    return out;
+   /* Reallocating memory */
+   str1 = (char *) realloc(str1, len1 + len2 +1);
+    strcat(str1, str2);
+    //str1[len2+len1+1] = '\0';
 }
 
 // ----------------------  Array of Ints ------------------------
@@ -61,4 +56,15 @@ void freeArrayChar(ArrayChar *a) {
   free(a->array);
   a->array = NULL;
   a->used = a->size = 0;
+}
+
+//---------------------- Read files --------------
+ssize_t readln(int fd, char *line, size_t size) {
+  ssize_t i = 0;
+  ssize_t bytes_read;
+  while (i < size && (bytes_read = read(fd, &line[i], 1)) > 0 &&
+         line[i] != '\n')
+    i++;
+  line[i++] = '\n';
+  return i;
 }

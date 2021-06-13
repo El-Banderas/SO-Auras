@@ -47,11 +47,22 @@ int main(int argc, char *argv[]){
     else{
         struct Filters* all = initFilter();
         int numChar = 10;
-        char buffer[numChar];
-        char * final;
-        while (read(fd, &buffer, numChar) > 0)
-            final = append_strings(final, buffer);
+        char buffer[numChar+1];
+        char * final= (char *) malloc(sizeof(char) * numChar);
         
+        int temp= 0;
+        char * final;
+        final = readl3(fd);
+        //while( ( temp = read(fd, final+temp, numChar)) >= 0 ){
+        //    numChar += 10;
+        //    final =  realloc(final, numChar * (sizeof(char *)));
+        //    temp+=10;
+        //}
+        //temp =read(fd, final, numChar);
+//        final[numChar+1] = '\0';
+ //       if (temp == numChar) 
+  //      {
+
         printf("[DEBUG] Config file loaded\n");
             printf("%s", final);
 

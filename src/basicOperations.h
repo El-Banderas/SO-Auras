@@ -21,4 +21,5 @@ void initArrayChar(ArrayChar *a, int initialSize);
 void insertArrayChar(ArrayChar *a, char* element) ;
 void freeArrayChar(ArrayChar *a);
 
-char * append_strings(const char * old, const char * new);
+void append_strings(char * str1, char *str2);
+ssize_t readln(int fd, char *line, size_t size) ;

@@ -24,4 +24,4 @@ test:
 	bin/aurras samples/sample-2.mp3 tmp/sample-2.mp3
 
 mal:
-	gcc src/basicOperations.c src/aurrasd.c 
+	gcc -Wall src/basicOperations.c src/aurrasd.c 
