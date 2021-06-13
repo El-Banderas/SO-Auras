@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <string.h>
 
-int main(){
-    char * path = "MYfifOServer";
+int main() {
+    char *path = "MYfifOServer";
     mkfifo(path, 0666);
 }
