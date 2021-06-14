@@ -20,14 +20,14 @@ struct Filters *initFilter() {
     struct Filters *new = malloc(sizeof(struct Filters));
     ArrayChar filtersNames;
     ArrayChar filtersPath;
-    initArrayChar(&filtersNames, 4);
-    initArrayChar(&filtersPath, 4);
+    initArrayChar(&filtersNames, 2);
+    initArrayChar(&filtersPath, 2);
     new->filtersNames = filtersNames;
     new->filtersPath = filtersPath;
     ArrayInt availableFilters;
     ArrayInt maxFilters;
-    initArrayInt(&availableFilters, 4);
-    initArrayInt(&maxFilters, 4);
+    initArrayInt(&availableFilters, 2);
+    initArrayInt(&maxFilters, 2);
 
     new->availableFilters = availableFilters;
     new->maxFilters = maxFilters;
@@ -40,15 +40,16 @@ void addFilter(char * filter, struct Filters *current){
     int available;
     //printf("AddFilter: %s \n", filter, strlen(filter));
     sscanf(filter, "%s %s %d", name, path, &available );
-    printf("Name %s\nPath %s\n Number %d\n ", name, path, available);
+   // printf("Name %s\nPath %s\n Number %d\n ", name, path, available);
     insertArrayChar(&(current->filtersNames), name);
     insertArrayChar(&(current->filtersPath), path);
     insertArrayInt(&(current->availableFilters), available);
     insertArrayInt(&(current->maxFilters), available);
+//    printf("%d %s\n", 0, getArrayChar(&(current->filtersNames) , 0));
 }
 
 void toString(struct Filters * x){
-    for (int i = 0; i < getSize(x->filtersNames); i++) printf("%d %s\n", i, getArrayChar(&(x->filtersNames), i));
+    for (int i = 0; i < getSize(x->filtersNames); i++) printf("To String %d %s\n", i, getArrayChar(&(x->filtersNames), i));
 }
 
 int main(int argc, char *argv[]) {
@@ -67,10 +68,11 @@ int main(int argc, char *argv[]) {
         char buffer[numChar];
         while (readln(fd, buffer, numChar) > 2  )
         {
-            addFilter(buffer, all);
+            /*if (buffer != NULL && strlen(buffer) > 2)*/ addFilter(buffer, all);
             for (int i = 0; buffer[i] != '\0' && i < numChar; i++) buffer[i] = '\0';
         }
         printf("[DEBUG] Config file loaded\n");
+        printf("\n\nAfter writing\n\n");
         toString(all);
 
         close(fd);

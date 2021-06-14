@@ -49,9 +49,13 @@ void insertArrayChar(ArrayChar *a, char *element) {
     char * x = malloc(sizeof(char) * size);
     strcpy(x, element);
     a->array[a->used++] = x;
+    //printf("Inserted %s \n", a->array[-1 + (a->used)]);
 }
 char *getArrayChar(ArrayChar *a, int pos) {
-    if (a->size > pos) return NULL;
+    //printf("X == //  %d <  %d\n",   a->used, pos);
+    if (a->used < pos) return "Invalid";
+    //printf("GetArrayChar %s \n", a->array[-1 + (a->used)]);
+    if (a->array[pos] == NULL) return "Invalid";
     int size = strlen(a->array[pos]);
     char * x = malloc(sizeof(char) * size);
     strcpy(x, a->array[pos]);
@@ -59,7 +63,7 @@ char *getArrayChar(ArrayChar *a, int pos) {
 }
 
 int getSize(ArrayChar a) {
-    return a.size;
+    return a.used;
 }
 
 void freeArrayChar(ArrayChar *a) {
