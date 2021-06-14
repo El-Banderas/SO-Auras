@@ -18,8 +18,7 @@ int main(){
     char buffer2[100];
     int fd;
     //meter write only
-     FILE *fdlog=  fopen("log.val", "w":q
-     );  
+     FILE *fdlog=  fopen("log.val", "w");
     while (1){
      fd =  open(path, O_RDONLY);  
      //Lê do terminal
