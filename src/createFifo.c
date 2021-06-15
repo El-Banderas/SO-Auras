@@ -2,6 +2,6 @@
 #include <sys/stat.h>
 
 int main(int argc, char const *argv[]) {
-    mkfifo("../Centralfifo", 0644);
+    mkfifo("/tmp/fifo", 0644);
     return 0;
 }
