@@ -8,7 +8,7 @@ bin/aurrasd: obj/aurrasd.o
 	gcc -g obj/aurrasd.o -o bin/aurrasd
 
 obj/aurrasd.o: src/aurrasd.c
-	gcc -Wall -g -c src/basicOperations.c src/aurrasd.c -o obj/aurrasd.o
+	gcc -Wall -g -c src/basicOperations.c src/aurrasd.c obj/aurrasd.o
 
 bin/aurras: obj/aurras.o
 	gcc -g obj/aurras.o -o bin/aurras

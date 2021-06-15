@@ -34,13 +34,13 @@ struct Filters *initFilter() {
     return new;
 }
 
-void addFilter(char * filter, struct Filters *current){
+void addFilter(char *filter, struct Filters *current) {
     char name[100];
     char path[100];
     int available;
     //printf("AddFilter: %s \n", filter, strlen(filter));
-    sscanf(filter, "%s %s %d", name, path, &available );
-   // printf("Name %s\nPath %s\n Number %d\n ", name, path, available);
+    sscanf(filter, "%s %s %d", name, path, &available);
+    // printf("Name %s\nPath %s\n Number %d\n ", name, path, available);
     insertArrayChar(&(current->filtersNames), name);
     insertArrayChar(&(current->filtersPath), path);
     insertArrayInt(&(current->availableFilters), available);
@@ -48,8 +48,9 @@ void addFilter(char * filter, struct Filters *current){
 //    printf("%d %s\n", 0, getArrayChar(&(current->filtersNames) , 0));
 }
 
-void toString(struct Filters * x){
-    for (int i = 0; i < getSize(x->filtersNames); i++) printf("To String %d %s\n", i, getArrayChar(&(x->filtersNames), i));
+void toString(struct Filters *x) {
+    for (int i = 0; i < getSize(x->filtersNames); i++)
+        printf("To String %d %s\n", i, getArrayChar(&(x->filtersNames), i));
 }
 
 int main(int argc, char *argv[]) {
@@ -64,10 +65,9 @@ int main(int argc, char *argv[]) {
         return -1;
     } else {
         struct Filters *all = initFilter();
-        int numChar = 526;
+        int numChar = 512;
         char buffer[numChar];
-        while (readln(fd, buffer, numChar) > 2  )
-        {
+        while (readln(fd, buffer, numChar) > 2) {
             /*if (buffer != NULL && strlen(buffer) > 2)*/ addFilter(buffer, all);
             for (int i = 0; buffer[i] != '\0' && i < numChar; i++) buffer[i] = '\0';
         }
