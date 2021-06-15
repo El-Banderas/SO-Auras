@@ -5,7 +5,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
+#include <signal.h>
 #include "basicOperations.h"
+#include "request.h"
 
 struct Filters {
     ArrayChar filtersNames; //Há diferença entre o path e o outro
@@ -16,7 +18,7 @@ struct Filters {
 };
 
 
-struct Filters *initFilter() {
+struct Filters *initFilterStructur() {
     struct Filters *new = malloc(sizeof(struct Filters));
     ArrayChar filtersNames;
     ArrayChar filtersPath;
@@ -52,18 +54,13 @@ void toString(struct Filters * x){
     for (int i = 0; i < getSize(x->filtersNames); i++) printf("To String %d %s\n", i, getArrayChar(&(x->filtersNames), i));
 }
 
-int main(int argc, char *argv[]) {
-    int fd;
-    if (argc < 2) {
-        perror("Insuficient argumetns");
-        return -1;
-    }
-    fd = open(argv[1], O_RDONLY);
+struct Filters * readConfig(char * path){
+    int fd = open(path, O_RDONLY);
     if (fd == 0) {
         perror("open");
-        return -1;
+        return NULL;
     } else {
-        struct Filters *all = initFilter();
+        struct Filters *all = initFilterStructur();
         int numChar = 526;
         char buffer[numChar];
         while (readln(fd, buffer, numChar) > 2  )
@@ -72,10 +69,62 @@ int main(int argc, char *argv[]) {
             for (int i = 0; buffer[i] != '\0' && i < numChar; i++) buffer[i] = '\0';
         }
         printf("[DEBUG] Config file loaded\n");
-        printf("\n\nAfter writing\n\n");
         toString(all);
 
         close(fd);
+        return all;
     }
+} 
+/**
+Quando chega um pedido, ele cria o fifo pessoal.
+Depois está a escrever mensagens para fazer debugg.
+*/
+void loadClient(char * buffer){
+    char privateFifo[40];
+    const char s[2] = "$";
+    char *ptr;
+    int pidChild = (int) strtol(strtok(buffer, s), &ptr, 10);
+    sprintf(privateFifo, "../tmp/%dFIFO$", pidChild); 
+    char * path = strtok(privateFifo, "$");
+    mkfifo(path, 0644);
+    int fd;
+    if ((fd = open(path, O_WRONLY)) < 0) perror("fifo load client not open\n");
+    kill(pidChild, SIGINT);
+    if( write(fd, "Olá do servidor\n", 18) < 0) perror ("Write to pipe ;)\n");
+    createRequest("O createRequest foi chamado\n");
+}
 
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        perror("Insuficient argumets\n");
+        return -1;
+    }
+    //Guarda o ficheiro .config
+    struct Filters * config = readConfig(argv[1]);
+    if (!config) {
+        perror("Config not loaded\n");
+        return -1;
+    }
+    //Cria o fifo central, onde os clientes mandam pedidos
+    mkfifo("tmp/centralFifo", 0644);
+    int fifofd ; 
+    int bytesRead = 0;
+    char buffer[1024];
+    while(1){
+        //Lê pedidos do fico central
+        if((fifofd = open("tmp/centralFifo", O_RDONLY)) < 0){
+            perror("fifo not open\n");
+            return -1;
+        } 
+        else printf("[DEBUG] : fifo popen\n");
+        //Carrega cada pedido, não faz já o request porque precisa do fifo privado
+        while ((bytesRead = readln(fifofd, buffer, 1024)) > 0){
+          loadClient(buffer);
+        }
+        if (bytesRead == 0){
+            printf("[DEBUG]: End of one client\n");
+        }
+    close(fifofd); 
+    }
+    return 0;
 }

@@ -15,5 +15,6 @@ struct Request {
 };
 
 Request createRequest(char *buffer) {
+    printf("%s\n", buffer);
     return NULL;
 }
