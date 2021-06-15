@@ -86,14 +86,15 @@ void loadClient(char * buffer){
     int pidChild = (int) strtol(strtok(buffer, s), &ptr, 10);
     sprintf(privateFifo, "tmp/%dFIFO$", pidChild); 
     char * path = strtok(privateFifo, "$");
-    printf("Path:%s\n", path);
     mkfifo(path, 0644);
     int fd;
-    printf("Aqui\n");
-    if ((fd = open(path, O_WRONLY)) < 0) perror("fifo load client not open\n");
+    printf("Path:'%s'\n", path);
     kill(pidChild, SIGINT);
+    fd = open(path, O_WRONLY);
+    //if ((fd = open(path, O_WRONLY)) < 0) perror("fifo load client not open\n");
+    printf("Aqui\n");
     if( write(fd, "Olá do servidor\n", 18) < 0) perror ("Write to pipe ;)\n");
-    createRequest("O createRequest foi chamado\n");
+    createRequest(ptr);
 }
 
 int main(int argc, char *argv[]) {
@@ -108,17 +109,18 @@ int main(int argc, char *argv[]) {
         return -1;
     }
     //Cria o fifo central, onde os clientes mandam pedidos
-    mkfifo("tmp/centralFifo", 0644);
+    char *pathCentralFIfo = "tmp/centralFifo";
+    mkfifo(pathCentralFIfo, 0644);
     int fifofd ; 
     int bytesRead = 0;
     char buffer[1024];
     while(1){
         //Lê pedidos do fico central
-        if((fifofd = open("tmp/centralFifo", O_RDONLY)) < 0){
+        if((fifofd = open(pathCentralFIfo, O_RDONLY)) < 0){
             perror("fifo not open\n");
             return -1;
         } 
-        else printf("[DEBUG] : fifo popen\n");
+        else printf("[DEBUG] : fifo geral open\n");
         //Carrega cada pedido, não faz já o request porque precisa do fifo privado
         while ((bytesRead = readln(fifofd, buffer, 1024)) > 0){
           loadClient(buffer);
