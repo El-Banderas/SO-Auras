@@ -84,10 +84,12 @@ void loadClient(char * buffer){
     const char s[2] = "$";
     char *ptr;
     int pidChild = (int) strtol(strtok(buffer, s), &ptr, 10);
-    sprintf(privateFifo, "../tmp/%dFIFO$", pidChild); 
+    sprintf(privateFifo, "tmp/%dFIFO$", pidChild); 
     char * path = strtok(privateFifo, "$");
+    printf("Path:%s\n", path);
     mkfifo(path, 0644);
     int fd;
+    printf("Aqui\n");
     if ((fd = open(path, O_WRONLY)) < 0) perror("fifo load client not open\n");
     kill(pidChild, SIGINT);
     if( write(fd, "Olá do servidor\n", 18) < 0) perror ("Write to pipe ;)\n");

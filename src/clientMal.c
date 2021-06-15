@@ -14,10 +14,11 @@ O cliente espera que o servidor crie o fifo privado (1 para 1), e depois começa
 */
 void ctrl_c_handler(int signum){
     char privateFifo[40];
-    sprintf(privateFifo, "../tmp/%dFIFO$\n", getpid()); 
+    sprintf(privateFifo, "tmp/%dFIFO$\n", getpid()); 
     char * path = strtok(privateFifo, "$");
     int fdPrivateFifo;
     if ((fdPrivateFifo = open(path, O_RDONLY)) < 0) printf("private fifo not open\n");
+    printf("Path:%s\n", path);
 
     char buffer[1024];
     int bytesRead = 0;
