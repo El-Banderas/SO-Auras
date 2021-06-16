@@ -14,6 +14,7 @@
 
 // ----------------------  Array of Ints ------------------------
 void initArrayInt(ArrayInt *a, int initialSize) {
+    a =  malloc(sizeof(ArrayInt));
     a->array = (int *) malloc(initialSize * sizeof(int));
     a->used = 0;
     a->size = initialSize;
@@ -35,12 +36,16 @@ void freeArrayInt(ArrayInt *a) {
 
 // ----------------------  Array of chars ------------------------
 void initArrayChar(ArrayChar *a, int initialSize) {
+    a =  malloc(sizeof(ArrayChar));
     a->array = (char **) malloc(initialSize * sizeof(char *));
     a->used = 0;
     a->size = initialSize;
 }
 
 void insertArrayChar(ArrayChar *a, char *element) {
+    printf("inserido\n");
+    //O problema está aqui
+    printf("%d %d\n", (a)->used, (a)->size);
     if (a->used == a->size) {
         a->size *= 2;
         a->array = (char **) realloc(a->array, a->size * sizeof(char *));

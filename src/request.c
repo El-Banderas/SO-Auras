@@ -27,6 +27,44 @@ struct Filters *filters = NULL;/*{
         .maxFilters = 0
 };*/
 
+struct Filters* initFilterStructur() {
+    struct Filters* filters = malloc(sizeof(struct Filters));
+    ArrayChar* filtersNames = NULL;
+    ArrayChar* filtersPath= NULL;
+    initArrayChar(filtersNames, 2);
+    initArrayChar(filtersPath, 2);
+    filters->filtersNames = filtersNames;
+    filters->filtersPath = filtersPath;
+    ArrayInt* availableFilters= NULL;
+    ArrayInt* maxFilters= NULL;
+    initArrayInt(availableFilters, 2);
+    initArrayInt(maxFilters, 2);
+
+    filters->availableFilters = availableFilters;
+    filters->maxFilters = maxFilters;
+    return filters;
+}
+
+void addFilter(char *filter, struct Filters *current) {
+    char name[100];
+    char path[100];
+    int available;
+    //printf("AddFilter: %s \n", filter, strlen(filter));
+    sscanf(filter, "%s %s %d", name, path, &available);
+    // printf("Name %s\nPath %s\n Number %d\n ", name, path, available);
+    insertArrayChar(current->filtersNames, name);
+    insertArrayChar(current->filtersPath, path);
+    insertArrayInt(current->availableFilters, available);
+    insertArrayInt(current->maxFilters, available);
+//    printf("%d %s\n", 0, getArrayChar(&(current->filtersNames) , 0));
+}
+
+// @Override
+void toString(struct Filters *x) {
+    for (int i = 0; i < getSize(*(x->filtersNames)); i++)
+        printf("To String %d %s\n", i, getArrayChar(x->filtersNames, i));
+}
+
 struct Request {
     pid_t pid;
     char *inputName;
@@ -143,4 +181,5 @@ int runRequest(Request r) {
 
         return 0;
     }
+    return -1;  //Fui eu que meti isto, o sujeito indefinido da frase é o Diogo
 }

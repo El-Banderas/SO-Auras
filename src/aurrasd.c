@@ -12,42 +12,8 @@
 
 extern struct Filters *filters;
 
-void initFilterStructur() {
-    filters = malloc(sizeof(struct Filters));
-    ArrayChar filtersNames;
-    ArrayChar filtersPath;
-    initArrayChar(&filtersNames, 2);
-    initArrayChar(&filtersPath, 2);
-    filters->filtersNames = filtersNames;
-    filters->filtersPath = filtersPath;
-    ArrayInt availableFilters;
-    ArrayInt maxFilters;
-    initArrayInt(&availableFilters, 2);
-    initArrayInt(&maxFilters, 2);
 
-    filters->availableFilters = availableFilters;
-    filters->maxFilters = maxFilters;
-}
 
-void addFilter(char *filter, struct Filters *current) {
-    char name[100];
-    char path[100];
-    int available;
-    //printf("AddFilter: %s \n", filter, strlen(filter));
-    sscanf(filter, "%s %s %d", name, path, &available);
-    // printf("Name %s\nPath %s\n Number %d\n ", name, path, available);
-    insertArrayChar(&(current->filtersNames), name);
-    insertArrayChar(&(current->filtersPath), path);
-    insertArrayInt(&(current->availableFilters), available);
-    insertArrayInt(&(current->maxFilters), available);
-//    printf("%d %s\n", 0, getArrayChar(&(current->filtersNames) , 0));
-}
-
-// @Override
-void toString(struct Filters *x) {
-    for (int i = 0; i < getSize(x->filtersNames); i++)
-        printf("To String %d %s\n", i, getArrayChar(&(x->filtersNames), i));
-}
 
 struct Filters * readConfig(char * path){
     int fd = open(path, O_RDONLY);
@@ -59,6 +25,7 @@ struct Filters * readConfig(char * path){
         int numChar = 526;
         char buffer[numChar];
         while (readln(fd, buffer, numChar) > 2) {
+    printf("Aqui!\n");
             /*if (buffer != NULL && strlen(buffer) > 2)*/ addFilter(buffer, all);
             for (int i = 0; buffer[i] != '\0' && i < numChar; i++) buffer[i] = '\0';
         }
@@ -77,14 +44,17 @@ void loadClient(char * buffer){
     char privateFifo[40];
     const char s[2] = "$";
     char *ptr;
+    
     int pidChild = (int) strtol(strtok(buffer, s), &ptr, 10);
     sprintf(privateFifo, "tmp/%dFIFO$", pidChild);
                         // tmp/<PID>.pipe
+    
     char * path = strtok(privateFifo, "$");
     mkfifo(path, 0644);
     int fd;
     printf("Path:'%s'\n", path);
     kill(pidChild, SIGINT);
+    
     fd = open(path, O_WRONLY);
     //if ((fd = open(path, O_WRONLY)) < 0) perror("fifo load client not open\n");
     printf("Aqui\n");
@@ -103,12 +73,15 @@ int main(int argc, char *argv[]) {
         perror("Config not loaded\n");
         return -1;
     }
+
     //Cria o fifo central, onde os clientes mandam pedidos
     char *pathCentralFIfo = "tmp/centralFifo";
     mkfifo(pathCentralFIfo, 0644);
+    
     int fifofd ;
     int bytesRead = 0;
     char buffer[1024];
+    
     while(1){
         //Lê pedidos do fico central
         if((fifofd = open(pathCentralFIfo, O_RDONLY)) < 0){
@@ -116,16 +89,20 @@ int main(int argc, char *argv[]) {
             return -1;
         }
         else printf("[DEBUG] : fifo geral open\n");
+    
         //Carrega cada pedido, não faz já o request porque precisa do fifo privado
         while ((bytesRead = readln(fifofd, buffer, 1024)) > 0){
           loadClient(buffer);
           Request r = createRequest(buffer);
           runRequest(r);
         }
+    
         if (bytesRead == 0){
             printf("[DEBUG]: End of one client\n");
         }
+    
     close(fifofd);
     }
+  
     return 0;
 }
