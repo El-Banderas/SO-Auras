@@ -10,10 +10,6 @@
 #include "request.h"
 
 
-extern struct Filters *filters;
-
-
-
 
 struct Filters * readConfig(char * path){
     int fd = open(path, O_RDONLY);
@@ -35,6 +31,13 @@ struct Filters * readConfig(char * path){
         return all;
     }
 }
+
+void ctrl_c_handeler(int signum){
+    printf("[DEBUG] - End of program by ctrl-C\n");
+    exit(0);
+}
+
+
 /**
 Quando chega um pedido, ele cria o fifo pessoal.
 Depois está a escrever mensagens para fazer debugg.
@@ -46,12 +49,12 @@ void loadClient(char * buffer, struct Filters *all){
 
     int pidChild = (int) strtol(buffer, &ptr, 10);
     
-    sprintf(privateFifo, "tmp/%dFIFO$", pidChild);
+    sprintf(privateFifo, "tmp/%d.pipe$", pidChild);
     char * path = strtok(privateFifo, "$");
     mkfifo(path, 0644);
 
     //int fd;
-    printf("Path:'%s'\n", path);
+    printf("\nPath:'%s'\n", path);
     //fd = open(path, O_WRONLY);
     //if ((fd = open(path, O_WRONLY)) < 0) perror("fifo load client not open\n");
     //printf("Aqui\n");
@@ -59,17 +62,17 @@ void loadClient(char * buffer, struct Filters *all){
     //Caso queira ver se o fifo funciona
     //if( write(fd, "Olá do servidor\n", 18) < 0) perror ("Write to pipe ;)\n");
 //    close(fd);
-
+    char * full = strdup(ptr);
     char * request =strtok(ptr, s); 
     //Verifica se o pedido é um status
-    char *status = "status\n";
+    char *status = "status";
     //printf("Current request is:'%s' and '%s' \n", request, status);
     int isStatus = 0;
     //Verifica se o pedido é status
     if (strlen(request) >= 5) for (; status[isStatus] != '\0' &&  status[isStatus] == request[isStatus]; isStatus++);
     //printf("Valores : %ld %ld %d \n", strlen(request), strlen(status), isStatus);
-    if (isStatus == 7) sendStatus(all, path, pidChild);
-    else createRequest(request, pidChild);
+    if (isStatus == 6) sendStatus(all, path, pidChild);
+    else createRequest(full, pidChild);
 }
 
 
@@ -83,6 +86,10 @@ int main(int argc, char *argv[]) {
     struct Filters * config = readConfig(argv[1]);
     if (!config) {
         perror("Config not loaded\n");
+        return -1;
+    }
+    if (signal(SIGINT, ctrl_c_handeler) == SIG_ERR){
+        perror("Erro com handler SIGINT");
         return -1;
     }
     //Cria o fifo central, onde os clientes mandam pedidos
@@ -99,13 +106,14 @@ int main(int argc, char *argv[]) {
         }
         else printf("[DEBUG] : fifo geral open\n");
         //Carrega cada pedido, não faz já o request porque precisa do fifo privado
-        while ((bytesRead = readln(fifofd, buffer, 1024)) > 0){
-            printf("Servidor recebeu: %s", buffer);
-            loadClient(buffer, config);
+        buffer[0] = '\0';
+        while ((bytesRead = readln(fifofd, buffer, 1024)) > 2){
+            if (buffer[0] != '\0' && strlen(buffer) > 2) {
+                printf("Servidor recebeu: %s", buffer);
+                loadClient(buffer, config);}
         }
-        if (bytesRead == 0){
-            printf("[DEBUG]: End of one client\n");
-        }
+        //if (bytesRead == 0){
+        printf("[DEBUG]: End of one client\n");
     close(fifofd);
     }
     return 0;

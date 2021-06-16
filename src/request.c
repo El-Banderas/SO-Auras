@@ -8,102 +8,82 @@
 #include <signal.h>
 #include "basicOperations.h"
 #include "request.h"
+#include "filters.h"
 
 #define bin "bin/aurrasd-filters"
 // <PID>.pipe
 
 
-struct Filters {
-    ArrayChar *filtersNames; // Há diferença entre o path e o outro
-    ArrayChar *filtersPath; // Name of filters
-    ArrayInt *availableFilters;
-    ArrayInt *maxFilters;
-    //Faltam reques;
-};
 
-struct Filters *filters = NULL;/*{
-        .filtersNames = NULL,
-        .filtersPath = NULL,
-        .availableFilters = NULL,
-        .maxFilters = 0
-};*/
-
-struct Filters* initFilterStructur() {
-    struct Filters* filters = malloc(sizeof(struct Filters));
-    filters->filtersNames = initArrayChar(2);
-    filters->filtersPath = initArrayChar(2);
-    
-
-    filters->availableFilters = initArrayInt(2);
-    filters->maxFilters = initArrayInt(2);
-    return filters;
-}
-
-void addFilter(char *filter, struct Filters *current) {
-    char name[100];
-    char path[100];
-    int available;
-    //printf("AddFilter: %s \n", filter, strlen(filter));
-    sscanf(filter, "%s %s %d", name, path, &available);
-    // printf("Name %s\nPath %s\n Number %d\n ", name, path, available);
-    insertArrayChar(current->filtersNames, name);
-    insertArrayChar(current->filtersPath, path);
-    insertArrayInt(current->availableFilters, available);
-    insertArrayInt(current->maxFilters, available);
-//    printf("%d %s\n", 0, getArrayChar(&(current->filtersNames) , 0));
-}
-
-// @Override
-ArrayChar * toString(struct Filters *x) {
-    ArrayChar * toString = initArrayChar(2);
-    insertArrayChar(toString, "Aqui inserem-se os requestes\n");
-
-    for (int i = 0; i < getSize(*(x->filtersNames)); i++){
-        char buffer[300];
-        int total = getArrayInt((x->maxFilters), i);
-        int running = total - getArrayInt((x->availableFilters), i);
-        sprintf(buffer, "Filter %s: %d / %d (runing/max)\n", getArrayChar((x->filtersNames), i), running, total);
-        insertArrayChar(toString, buffer);
-        /*
-        strcat(buffer, getArrayChar(x->filtersNames));
-        strcat(buffer, ": ");
-        */
- //       printf("To String %d %s\n", i, getArrayChar(&(x->filtersNames), i));
-    }
-    //for (int i = 0; i < getSize(x->filtersNames); i++) printf("%s", getArrayChar(toString, i));
-    return toString;
-}
+//struct Filters *filters = NULL;
 
 struct Request {
     pid_t pid;
     char *inputName;
     char *outputName;
 
-    char **filters;
+    ArrayChar* filters;
     int sizeFilter;
 };
 
+int countDollars(char * buffer){
+    printf("To count dollars of '%s'", buffer);
+    int res = 0;
+    for (int i = 0; i < strlen(buffer); i++)
+        if (buffer[i] == '$') res++;
+    return res;
+}
+
 Request createRequest(char *buffer, int pidClient) {
-    printf("%s\n", buffer);
+    sleep(10);
+    int numArgs = countDollars(buffer);
+    //Se tiver apenas 2 $ só tem $input$output$filtro$end\n
+    if (numArgs < 4) {
+        printf("Pedido '%s' inválido\n", buffer);
+        return NULL;
+    }
+    struct Request* new = malloc(sizeof(struct Request));
+    new->pid = (pid_t) pidClient;
+    const char s[2] = "$";
+    new->inputName = strtok(buffer, s);
+    new->outputName = strtok(buffer, s);
+    new->filters = initArrayChar(1);
+    //Guardar os vários filtros
+    //Não quero o end
+    for (int i = 0; i < numArgs - 2; i++) {
+       insertArrayChar(new->filters, strtok(buffer, s)); 
+    }
+    new->sizeFilter = numArgs-2;  
+    //Verificar
+    printf("O request criado é:\n");
+    printf("inputName:%s\n", new->inputName);
+    printf("OutputName:%s\n", new->outputName);
+    for (int i = 0; i < getSize(*(new->filters)); i++) 
+            printf("Filtro %d:%s", i, getArrayChar(new->filters, i)); 
+    //Acorda processo filho, mas já?
+    //Avisar o filho que vai começar
+    kill(pidClient, SIGUSR2);
+//    printf("%s\n", buffer);
     return NULL;
 }
 //Se não estiver a enviar, tirar o printf de comentário dentro do for
 //Não sei porque funciona, mas funciona
 void sendStatus(struct Filters *all, char * path, int pidClient){
-    kill(pidClient, SIGINT);
+    //Avisar o filho que vai começar
+    kill(pidClient, SIGUSR1);
     printf("Status is here\n");
     ArrayChar * convertedToString = toString(all);
+    //Abrir pipe privado
     int fd = open(path, O_WRONLY);
     //if ((fd = open(path, O_WRONLY)) < 0) perror("fifo load client not open\n");
-    for (int i = 0; i < getSize(*(all->filtersNames)); i++){
+    for (int i = 0; i < getSize ( *getFiltersNames(all)); i++){
         char * thisLine = getArrayChar(convertedToString, i);
         //printf("%s", thisLine);
         write(fd, thisLine , strlen(thisLine) ) ;
     }
-    
     close(fd);
-    
 }
+
 int execCommand(char *command) {
     char *args[10];
     char *tmp = strtok(command, " ");
@@ -146,7 +126,7 @@ int runRequest(Request r) {
                 return -1;
 
             case 0:
-                execCommand(r->filters[0]);
+                execCommand(getArrayChar(r->filters,0));
                 _exit(0);
 
 
@@ -170,7 +150,7 @@ int runRequest(Request r) {
                 dup2(pipes[0][1], 1);
                 close(pipes[0][1]);
 
-                execCommand((r->filters)[0]);
+                execCommand(getArrayChar(r->filters, 0));
                 _exit(0); // Caso dê erro no exec
 
             default:
@@ -196,7 +176,7 @@ int runRequest(Request r) {
                 dup2(output, 1);
                 close(output);
 
-                execCommand((r->filters)[n]);
+                execCommand(getArrayChar(r->filters,n));
                 _exit(0); // Caso dê erro no exec
 
             default:

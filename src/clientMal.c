@@ -10,10 +10,10 @@
 /**
 O cliente espera que o servidor crie o fifo privado (1 para 1), e depois começa a ler a partir dele.
 */
-void ctrl_c_handler(int signum){
+void ctrl_status(int signum){
     char privateFifo[40];
     printf("Recebi o sinal\n");
-    sprintf(privateFifo, "../tmp/%dFIFO$\n", getpid()); 
+    sprintf(privateFifo, "../tmp/%d.pipe$\n", getpid()); 
     char * path = strtok(privateFifo, "$");
     int fdPrivateFifo;
     printf("Path:'%s'\n", path);
@@ -26,6 +26,10 @@ void ctrl_c_handler(int signum){
     }
     exit(0);
 }
+void ctrl_filter(int signum){
+    printf("Nothing to do, bye bye\n");
+    exit(0);
+}
 
 /**
 Inicialmente, o cliente deve mandar o seu número de processo e o pedido.
@@ -36,24 +40,29 @@ int main(int argc, char const *argv[]) {
     int size_argv = 0;
     size_argv += 5;
     for (int i = 0; i < argc - 1; i++) size_argv += strlen(argv[i]);
-    size_argv += (argc + 5);
+    size_argv += (argc + 6);
     char currentPid[size_argv];
     sprintf(currentPid,"%d",getpid());
     
-    for (int i = 0; i < argc - 1; i++) {
+    for (int i = 1; i < argc ; i++) {
         strcat(currentPid, "$");
         strcat(currentPid, argv[i]);
     }
     
     strcat(currentPid,"$");
-    strcat(currentPid,"End");
+    strcat(currentPid,"End\n");
 
     //char currentPid[10];
     //sprintf(currentPid, "%d$coisas yey\n", getpid()); 
     
+    printf("Enviado: %s\n", currentPid);
     write(fd, currentPid, size_argv);
     close(fd);
-    if (signal(SIGINT, ctrl_c_handler) == SIG_ERR){
+    if (signal(SIGUSR1, ctrl_status) == SIG_ERR){
+        perror("Erro com handler SIGINT");
+        return -1;
+    }
+    if (signal(SIGUSR2, ctrl_filter) == SIG_ERR){
         perror("Erro com handler SIGINT");
         return -1;
     }
