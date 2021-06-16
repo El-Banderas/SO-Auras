@@ -1,2 +1,4 @@
-*.out
 *.gch
+*.out
+obj/*.o
+.idea

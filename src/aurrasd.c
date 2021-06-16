@@ -9,31 +9,24 @@
 #include "basicOperations.h"
 #include "request.h"
 
-struct Filters {
-    ArrayChar filtersNames; //Há diferença entre o path e o outro
-    ArrayChar filtersPath; //Name of filters
-    ArrayInt availableFilters;
-    ArrayInt maxFilters;
-    //Faltam reques;
-};
 
+extern struct Filters *filters;
 
-struct Filters *initFilterStructur() {
-    struct Filters *new = malloc(sizeof(struct Filters));
+void initFilterStructur() {
+    filters = malloc(sizeof(struct Filters));
     ArrayChar filtersNames;
     ArrayChar filtersPath;
     initArrayChar(&filtersNames, 2);
     initArrayChar(&filtersPath, 2);
-    new->filtersNames = filtersNames;
-    new->filtersPath = filtersPath;
+    filters->filtersNames = filtersNames;
+    filters->filtersPath = filtersPath;
     ArrayInt availableFilters;
     ArrayInt maxFilters;
     initArrayInt(&availableFilters, 2);
     initArrayInt(&maxFilters, 2);
 
-    new->availableFilters = availableFilters;
-    new->maxFilters = maxFilters;
-    return new;
+    filters->availableFilters = availableFilters;
+    filters->maxFilters = maxFilters;
 }
 
 void addFilter(char *filter, struct Filters *current) {
@@ -50,6 +43,7 @@ void addFilter(char *filter, struct Filters *current) {
 //    printf("%d %s\n", 0, getArrayChar(&(current->filtersNames) , 0));
 }
 
+// @Override
 void toString(struct Filters *x) {
     for (int i = 0; i < getSize(x->filtersNames); i++)
         printf("To String %d %s\n", i, getArrayChar(&(x->filtersNames), i));
@@ -85,6 +79,7 @@ void loadClient(char * buffer){
     char *ptr;
     int pidChild = (int) strtol(strtok(buffer, s), &ptr, 10);
     sprintf(privateFifo, "tmp/%dFIFO$", pidChild);
+                        // tmp/<PID>.pipe
     char * path = strtok(privateFifo, "$");
     mkfifo(path, 0644);
     int fd;
@@ -124,6 +119,8 @@ int main(int argc, char *argv[]) {
         //Carrega cada pedido, não faz já o request porque precisa do fifo privado
         while ((bytesRead = readln(fifofd, buffer, 1024)) > 0){
           loadClient(buffer);
+          Request r = createRequest(buffer);
+          runRequest(r);
         }
         if (bytesRead == 0){
             printf("[DEBUG]: End of one client\n");

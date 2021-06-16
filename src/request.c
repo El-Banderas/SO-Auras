@@ -5,11 +5,30 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <string.h>
+#include "basicOperations.h"
 #include "request.h"
 
 #define bin "bin/aurrasd-filters"
+// <PID>.pipe
+
+
+struct Filters {
+    ArrayChar *filtersNames; // Há diferença entre o path e o outro
+    ArrayChar *filtersPath; // Name of filters
+    ArrayInt *availableFilters;
+    ArrayInt *maxFilters;
+    //Faltam reques;
+};
+
+struct Filters *filters = NULL;/*{
+        .filtersNames = NULL,
+        .filtersPath = NULL,
+        .availableFilters = NULL,
+        .maxFilters = 0
+};*/
 
 struct Request {
+    pid_t pid;
     char *inputName;
     char *outputName;
 
@@ -95,7 +114,7 @@ int runRequest(Request r) {
                 close(pipes[0][1]); // Fechar pipe de escrita
 
         }
-        for (int i = 0; i < r->sizeFilter - 1; i++) {
+        for (int i = 1; i < r->sizeFilter - 1; i++) {
             // cenas
         }
 
