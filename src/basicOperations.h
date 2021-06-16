@@ -8,9 +8,11 @@ typedef struct {
     int size;
 } ArrayInt;
 
-void initArrayInt(ArrayInt *a, int initialSize);
+ArrayInt *initArrayInt(int initialSize);
 
 void insertArrayInt(ArrayInt *a, int element);
+
+int getArrayInt(ArrayInt *a, int pos);
 
 void freeArrayInt(ArrayInt *a);
 
@@ -20,7 +22,7 @@ typedef struct {
     int size;
 } ArrayChar; // METE COM * DIOGOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 
-void initArrayChar(ArrayChar *a, int initialSize);
+ArrayChar *initArrayChar(int initialSize);
 
 void insertArrayChar(ArrayChar *a, char *element);
 

@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <string.h>
+#include <signal.h>
 #include "basicOperations.h"
 #include "request.h"
 
@@ -29,19 +30,12 @@ struct Filters *filters = NULL;/*{
 
 struct Filters* initFilterStructur() {
     struct Filters* filters = malloc(sizeof(struct Filters));
-    ArrayChar* filtersNames = NULL;
-    ArrayChar* filtersPath= NULL;
-    initArrayChar(filtersNames, 2);
-    initArrayChar(filtersPath, 2);
-    filters->filtersNames = filtersNames;
-    filters->filtersPath = filtersPath;
-    ArrayInt* availableFilters= NULL;
-    ArrayInt* maxFilters= NULL;
-    initArrayInt(availableFilters, 2);
-    initArrayInt(maxFilters, 2);
+    filters->filtersNames = initArrayChar(2);
+    filters->filtersPath = initArrayChar(2);
+    
 
-    filters->availableFilters = availableFilters;
-    filters->maxFilters = maxFilters;
+    filters->availableFilters = initArrayInt(2);
+    filters->maxFilters = initArrayInt(2);
     return filters;
 }
 
@@ -60,9 +54,24 @@ void addFilter(char *filter, struct Filters *current) {
 }
 
 // @Override
-void toString(struct Filters *x) {
-    for (int i = 0; i < getSize(*(x->filtersNames)); i++)
-        printf("To String %d %s\n", i, getArrayChar(x->filtersNames, i));
+ArrayChar * toString(struct Filters *x) {
+    ArrayChar * toString = initArrayChar(2);
+    insertArrayChar(toString, "Aqui inserem-se os requestes\n");
+
+    for (int i = 0; i < getSize(*(x->filtersNames)); i++){
+        char buffer[300];
+        int total = getArrayInt((x->maxFilters), i);
+        int running = total - getArrayInt((x->availableFilters), i);
+        sprintf(buffer, "Filter %s: %d / %d (runing/max)\n", getArrayChar((x->filtersNames), i), running, total);
+        insertArrayChar(toString, buffer);
+        /*
+        strcat(buffer, getArrayChar(x->filtersNames));
+        strcat(buffer, ": ");
+        */
+ //       printf("To String %d %s\n", i, getArrayChar(&(x->filtersNames), i));
+    }
+    //for (int i = 0; i < getSize(x->filtersNames); i++) printf("%s", getArrayChar(toString, i));
+    return toString;
 }
 
 struct Request {
@@ -74,11 +83,27 @@ struct Request {
     int sizeFilter;
 };
 
-Request createRequest(char *buffer) {
+Request createRequest(char *buffer, int pidClient) {
     printf("%s\n", buffer);
     return NULL;
 }
-
+//Se não estiver a enviar, tirar o printf de comentário dentro do for
+//Não sei porque funciona, mas funciona
+void sendStatus(struct Filters *all, char * path, int pidClient){
+    kill(pidClient, SIGINT);
+    printf("Status is here\n");
+    ArrayChar * convertedToString = toString(all);
+    int fd = open(path, O_WRONLY);
+    //if ((fd = open(path, O_WRONLY)) < 0) perror("fifo load client not open\n");
+    for (int i = 0; i < getSize(*(all->filtersNames)); i++){
+        char * thisLine = getArrayChar(convertedToString, i);
+        //printf("%s", thisLine);
+        write(fd, thisLine , strlen(thisLine) ) ;
+    }
+    
+    close(fd);
+    
+}
 int execCommand(char *command) {
     char *args[10];
     char *tmp = strtok(command, " ");

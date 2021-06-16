@@ -13,11 +13,20 @@
 
 
 // ----------------------  Array of Ints ------------------------
-void initArrayInt(ArrayInt *a, int initialSize) {
+ArrayInt * initArrayInt(int initialSize) {
+    ArrayInt *a =  malloc(sizeof(ArrayInt));
     a =  malloc(sizeof(ArrayInt));
     a->array = (int *) malloc(initialSize * sizeof(int));
     a->used = 0;
     a->size = initialSize;
+    return a;
+}
+int getArrayInt(ArrayInt *a, int pos) {
+    //printf("X == //  %d <  %d\n",   a->used, pos);
+    if (a->used < pos) return-1;
+    //printf("GetArrayChar %s \n", a->array[-1 + (a->used)]);
+    if (!a->array[pos]) return -1;
+    return a->array[pos];
 }
 
 void insertArrayInt(ArrayInt *a, int element) {
@@ -35,17 +44,16 @@ void freeArrayInt(ArrayInt *a) {
 }
 
 // ----------------------  Array of chars ------------------------
-void initArrayChar(ArrayChar *a, int initialSize) {
-    a =  malloc(sizeof(ArrayChar));
+ArrayChar *initArrayChar(int initialSize) {
+    ArrayChar *a =  malloc(sizeof(ArrayChar));
     a->array = (char **) malloc(initialSize * sizeof(char *));
     a->used = 0;
     a->size = initialSize;
+    return a;
 }
 
 void insertArrayChar(ArrayChar *a, char *element) {
-    printf("inserido\n");
     //O problema está aqui
-    printf("%d %d\n", (a)->used, (a)->size);
     if (a->used == a->size) {
         a->size *= 2;
         a->array = (char **) realloc(a->array, a->size * sizeof(char *));
