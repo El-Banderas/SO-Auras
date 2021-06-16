@@ -36,7 +36,7 @@ Aqui não faz mais nada, para não confundir o seu pedido com o dos outros clien
 int main(int argc, char const *argv[]) {
     int fd = open("../tmp/centralFifo", O_WRONLY);
     char currentPid[30];
-    sprintf(currentPid, "%d$status", getpid()); 
+    sprintf(currentPid, "%d$seatus", getpid()); 
     printf("Cliente escreveu:%s\n", currentPid);
     write(fd, currentPid, strlen(currentPid));
     close(fd);
