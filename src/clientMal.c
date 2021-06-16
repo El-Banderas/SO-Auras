@@ -35,10 +35,10 @@ Aqui não faz mais nada, para não confundir o seu pedido com o dos outros clien
 */
 int main(int argc, char const *argv[]) {
     int fd = open("../tmp/centralFifo", O_WRONLY);
-    char currentPid[10];
-    sprintf(currentPid, "%d$coisas yey\n", getpid()); 
-
-    write(fd, currentPid, 10);
+    char currentPid[30];
+    sprintf(currentPid, "%d$status", getpid()); 
+    printf("Cliente escreveu:%s\n", currentPid);
+    write(fd, currentPid, strlen(currentPid));
     close(fd);
     if (signal(SIGINT, ctrl_c_handler) == SIG_ERR){
         perror("Erro com handler SIGINT");
