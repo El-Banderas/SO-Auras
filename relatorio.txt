@@ -1,0 +1,15 @@
+Introdução
+
+O nosso programa tem duas entidades principais, o cliente (cuja duração é a mesma do pedido) e o servidor (com duração mais prolongada).
+O cliente pode pedir dois tipos de comandos: status e aplicação de filtros. O status imprime as informações relativas ao estado do servidor, como o filtros disponíveis/ocupados e processos em execução no momento em que esta informação aparece. Este pedido pode sofrer atrasos por ter pedidos de filtros a bloquear o servidor.   --->> Ver isto, porque se acumularmos os pedidos noutro array, é possível ter os status sem esperar que os pedidos anteriores sejam feitos.
+O servidor coordena os vários pedidos dos clientes, o seu funcionamento será explicado a seguir.
+
+Estrutura do programa
+
+Quando o servidor é ligado, ele inicializa uma estrutura com os vários filtros disponíveis, a partir do ficheiro config, utilizando a função "readConfig". Esta estrutura com os filtros disponíveis para execução é armazenada numa variável global, para que os processos concorrentes saibam se podem usar os filtros ou não.
+Posteriormente, é criado um pipe com nome na pasta tmp, chamado "centralFifo", e cujo nome os clientes também conhecem. É a partir deste "centralFifo" que os clientes enviam os seus pedidos. Os pedidos começam com o número do processo do cliente, e comandos, com "$" entre eles.
+A seguir, o servidor espera que algum cliente escreva pedidos no "centralFifo", e chama a função "loadClient" para processar o pedido. Se o pedido for correto, se existirem os filtros pedidos, o programa averigua se existem filtros disponíveis para poder executar o mmpeg, caso contrário espera que fiquem livres. Esta não é uma espera ativa, porque seria demasiado custosa. Nós decidimos usar a função "pause" para que quando hajam filtros disponíveis o programa continue. Quando se torna possível, usamos o comando execlp para aplicar os filtros.
+
+Quer o comando seja "status" ou aplicação de filtros, o servidor cria um fifo para poder comunicar com o cliente. O formato do nome deste fifo é... e o cliente recebe um sinal do servidor (SIGINT) a dizer que este fifo mais específico já foi criado. O sinal é recebido com um handler para este sinal em específico. De seguida, o cliente fica à espera que o servidor mande a informação para ele imprimir, no caso do status, ou executar, no caso de aplicação de filtros.
+
+->Verificar se alguma vez será possível executar o comado, por exemplo pedir 3 altos quando só existem 2
