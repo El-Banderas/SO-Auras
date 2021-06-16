@@ -19,7 +19,6 @@ struct Filters {
     ArrayInt *maxFilters;
     //Faltam reques;
 };
-
 //struct Filters *filters = NULL;
 /*{
         .filtersNames = NULL,
@@ -27,6 +26,15 @@ struct Filters {
         .availableFilters = NULL,
         .maxFilters = 0
 };*/
+
+int filtersMissing(struct Filters * current, char * name){
+    for (int i = 0; i < getSize(*(current->filtersNames)); i++){
+        if (!strcmp(getArrayChar((current->filtersNames), i), name)) {
+            return getArrayInt(current->availableFilters, i);
+        }
+    }
+    return -1;
+}
 
 struct Filters* initFilterStructur() {
     struct Filters* filters = malloc(sizeof(struct Filters));

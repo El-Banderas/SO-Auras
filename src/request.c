@@ -35,7 +35,7 @@ int countDollars(char * buffer){
 }
 
 Request createRequest(char *buffer, int pidClient) {
-    sleep(10);
+    //sleep(10);
     int numArgs = countDollars(buffer);
     //Se tiver apenas 2 $ só tem $input$output$filtro$end\n
     if (numArgs < 4) {
