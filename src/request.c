@@ -88,9 +88,9 @@ void sendStatus(char *path, int pidClient) {
     kill(pidClient, SIGUSR2);
 }
 
-int execCommand(char *command) {
+int execFilter(char *filter) {
     char *args[10];
-    char *tmp = strtok(command, " ");
+    char *tmp = strtok(filter, " ");
 
     int i;
     for (i = 0; tmp; i++) {
@@ -99,7 +99,11 @@ int execCommand(char *command) {
     }
     args[i] = NULL;
 
-    int ret = execvp(args[0], args);
+    const char c[100] = "bin/aurrasd-filters/";
+    char *path = strdup(c);
+    strcat(path, filter);
+
+    int ret = execlp(path, filter, NULL);
 
     return ret;
 }
@@ -113,7 +117,6 @@ int runRequest(Request r) {
     while (filtersMissing(r->filters)) pause();
     // O filho tem que ter o PID do pai, para quando acabar avisar este (PAI) que pode verificar se pode correr o request
 
-    const char c[100] = "bin/aurrasd-filters/";
 
     int input = open(r->inputName, O_RDONLY);
     if (input == -1) {
@@ -138,15 +141,13 @@ int runRequest(Request r) {
         dup2(output, 1);
         close(input);
         close(output);
-        char *path = strdup(c);
-        strcat(path, getArrayChar(r->filters, 0));
         switch (fork()) {
             case -1:
                 perror("fork");
                 return -1;
 
             case 0:
-                execCommand(path); // "bin/aurrasd-filters/aurrasd-gain-half"
+                execFilter(getArrayChar(r->filters, 0)); // "bin/aurrasd-filters/aurrasd-gain-half"
                 _exit(0);
 
             default:
@@ -161,9 +162,6 @@ int runRequest(Request r) {
             perror("pipe");
             return -1;
         }
-        char *path = strdup(c);
-        strcat(path, getArrayChar(r->filters, 0));
-        printf("[DEBUG] Path exec: %s\n", path);
         switch (fork()) {
             case -1:
                 perror("fork");
@@ -175,12 +173,12 @@ int runRequest(Request r) {
                 // Redirecionar o stdout e o stdin para o pipe para o primeiro filtro
                 printf("[DEBUG] DeadLock?\n");
                 dup2(input, 0);
+                close(input);
                 printf("[DEBUG] SemDeadLockInput\n");
                 dup2(pipes[0][1], 1);
-                printf("[DEBUG] SemDeadLockPipe\n");
                 close(pipes[0][1]);
-                close(input);
-                execCommand(path);
+                printf("[DEBUG] SemDeadLockPipe\n");
+                execFilter(getArrayChar(r->filters, 0));
                 _exit(0); // Caso dê erro no exec
 
             default:
@@ -195,9 +193,6 @@ int runRequest(Request r) {
                 perror("pipe");
                 return -1;
             }
-            path = strdup(c);
-            strcat(path, getArrayChar(r->filters, i));
-            printf("[DEBUG] Path exec: %s %d\n", path, i);
             switch (fork()) {
                 case -1:
                     perror("fork");
@@ -212,7 +207,7 @@ int runRequest(Request r) {
                     dup2(pipes[i][1], 1);
                     close(pipes[i][1]);
 
-                    execCommand(c);
+                    execFilter(getArrayChar(r->filters, i));
                     _exit(0); // Caso dê erro no exec
 
                 default:
@@ -223,9 +218,6 @@ int runRequest(Request r) {
         }
 
         int n = sizeFilter - 1;
-        path = strdup(c);
-        strcat(path, getArrayChar(r->filters, n));
-        printf("[DEBUG] Path exec: %s\n", path);
         switch (fork()) {
             case -1:
                 perror("fork");
@@ -240,19 +232,14 @@ int runRequest(Request r) {
                 dup2(output, 1);
                 close(output);
 
-                execCommand(c);
+                execFilter(getArrayChar(r->filters, n));
                 _exit(0); // Caso dê erro no exec
 
             default:
                 close(output); // Fechar pipe de escrita
                 close(pipes[n - 1][0]); // Fechar pipe de leitura
         }
-
-        return 0;
-
-        for (int i = 0; i < sizeFilter; i++) {
             wait(NULL);
-        }
     }
     return -1;  //Fui eu que meti isto, o sujeito indefinido da frase é o Diogo
 }
