@@ -1,9 +1,14 @@
+#include "basicOperations.h"
 
 
 struct Filters;
 
-struct Filters* initFilterStructur() ;
-void addFilter(char *filter, struct Filters *current) ;
-ArrayChar * toString(struct Filters *x);
-ArrayChar* getFiltersNames(struct Filters *x);
-int filtersMissing(struct Filters * current, char * name);
+void initFilterStructur();
+
+void addFilter(char *filter);
+
+ArrayChar *toString();
+
+ArrayChar *getFiltersNames();
+
+int filtersMissing(ArrayChar *filters);

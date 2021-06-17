@@ -6,82 +6,79 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <signal.h>
-#include "basicOperations.h"
 #include "request.h"
 #include "filters.h"
-
-
 
 struct Filters {
     ArrayChar *filtersNames; // Há diferença entre o path e o outro
     ArrayChar *filtersPath; // Name of filters
     ArrayInt *availableFilters;
     ArrayInt *maxFilters;
-    //Faltam reques;
 };
-//struct Filters *filters = NULL;
-/*{
-        .filtersNames = NULL,
-        .filtersPath = NULL,
-        .availableFilters = NULL,
-        .maxFilters = 0
-};*/
 
-int filtersMissing(struct Filters * current, char * name){
-    for (int i = 0; i < getSize(*(current->filtersNames)); i++){
-        if (!strcmp(getArrayChar((current->filtersNames), i), name)) {
-            return getArrayInt(current->availableFilters, i);
+struct Filters *filters = NULL;
+
+
+int filtersMissing(ArrayChar* requestFilters){
+    for (int i = 0; i < getSize(*(filters->filtersNames)); i++){
+        for(int j = 0; j < getSize(*(requestFilters)); j++) {
+            if (!strcmp(getArrayChar((filters->filtersNames), i), getArrayChar(requestFilters, j))
+            && getArrayInt(filters->availableFilters, i) == 0) {
+                printf("Return 0\n");
+                return 1;
+            }
         }
+
     }
-    return -1;
+    printf("Return 1\n");
+    return 0;
 }
 
-struct Filters* initFilterStructur() {
-    struct Filters* filters = malloc(sizeof(struct Filters));
+void initFilterStructur() {
+    filters = malloc(sizeof(struct Filters));
     filters->filtersNames = initArrayChar(2);
     filters->filtersPath = initArrayChar(2);
     
 
     filters->availableFilters = initArrayInt(2);
     filters->maxFilters = initArrayInt(2);
-    return filters;
 }
 
-void addFilter(char *filter, struct Filters *current) {
+void addFilter(char *filter) {
     char name[100];
     char path[100];
     int available;
     //printf("AddFilter: %s \n", filter, strlen(filter));
     sscanf(filter, "%s %s %d", name, path, &available);
     // printf("Name %s\nPath %s\n Number %d\n ", name, path, available);
-    insertArrayChar(current->filtersNames, name);
-    insertArrayChar(current->filtersPath, path);
-    insertArrayInt(current->availableFilters, available);
-    insertArrayInt(current->maxFilters, available);
+    insertArrayChar(filters->filtersNames, name);
+    insertArrayChar(filters->filtersPath, path);
+    insertArrayInt(filters->availableFilters, available);
+    insertArrayInt(filters->maxFilters, available);
 //    printf("%d %s\n", 0, getArrayChar(&(current->filtersNames) , 0));
 }
 
 // @Override
-ArrayChar * toString(struct Filters *x) {
+ArrayChar * toString() {
     ArrayChar * toString = initArrayChar(2);
     insertArrayChar(toString, "Aqui inserem-se os requestes\n");
 
-    for (int i = 0; i < getSize(*(x->filtersNames)); i++){
+    for (int i = 0; i < getSize(*(filters->filtersNames)); i++){
         char buffer[300];
-        int total = getArrayInt((x->maxFilters), i);
-        int running = total - getArrayInt((x->availableFilters), i);
-        sprintf(buffer, "Filter %s: %d / %d (runing/max)\n", getArrayChar((x->filtersNames), i), running, total);
+        int total = getArrayInt((filters->maxFilters), i);
+        int running = total - getArrayInt((filters->availableFilters), i);
+        sprintf(buffer, "Filter %s: %d / %d (runing/max)\n", getArrayChar((filters->filtersNames), i), running, total);
         insertArrayChar(toString, buffer);
         /*
-        strcat(buffer, getArrayChar(x->filtersNames));
+        strcat(buffer, getArrayChar(filters->filtersNames));
         strcat(buffer, ": ");
         */
- //       printf("To String %d %s\n", i, getArrayChar(&(x->filtersNames), i));
+ //       printf("To String %d %s\n", i, getArrayChar(&(filters->filtersNames), i));
     }
-    //for (int i = 0; i < getSize(x->filtersNames); i++) printf("%s", getArrayChar(toString, i));
+    //for (int i = 0; i < getSize(filters->filtersNames); i++) printf("%s", getArrayChar(toString, i));
     return toString;
 }
 
-ArrayChar* getFiltersNames(struct Filters *x){
-    return x->filtersNames;
+ArrayChar* getFiltersNames(){
+    return filters->filtersNames;
 }
