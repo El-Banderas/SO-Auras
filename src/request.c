@@ -106,18 +106,10 @@ int execCommand(char *command) {
 
 
 int runRequest(Request r) {
-    /*
-    r = malloc(sizeof(struct Request));
-    r->inputName = strdup("samples/sample-1-so.m4a");
-    r->filters = initArrayChar(3);
-    insertArrayChar(r->filters, "alto");
-    insertArrayChar(r->filters, "eco");
-    insertArrayChar(r->filters, "rapido");
-    r->outputName = "output.m4a";
-    */
-
     while (filtersMissing(r->filters)) pause();
     // O filho tem que ter o PID do pai, para quando acabar avisar este (PAI) que pode verificar se pode correr o request
+
+    char c[100] = "bin/aurrasd-filters/";
 
     int input = open(r->inputName, O_RDONLY);
     if (input == -1) {
@@ -142,8 +134,7 @@ int runRequest(Request r) {
         dup2(output, 1);
         close(input);
         close(output);
-        char c[100] = "bin/aurrasd-filters/aurrasd-echo";
-        strcat(strdup(c), getArrayChar(r->filters, 0));
+        strcat(c, getArrayChar(r->filters, 0));
         switch (fork()) {
             case -1:
                 perror("fork");
@@ -165,6 +156,7 @@ int runRequest(Request r) {
             perror("pipe");
             return -1;
         }
+        strcat(strdup(c), getArrayChar(r->filters, 0));
         switch (fork()) {
             case -1:
                 perror("fork");
@@ -188,6 +180,7 @@ int runRequest(Request r) {
 
         }
         for (int i = 1; i < sizeFilter - 1; i++) {
+            strcat(strdup(c), getArrayChar(r->filters, i));
             switch (fork()) {
                 case -1:
                     perror("fork");
@@ -213,6 +206,7 @@ int runRequest(Request r) {
         }
 
         int n = sizeFilter - 1;
+        strcat(strdup(c), getArrayChar(r->filters, n));
         switch (fork()) {
             case -1:
                 perror("fork");
