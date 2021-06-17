@@ -45,7 +45,6 @@ Request createRequest(char *buffer, int pidClient, char * path) {
     new->pid = (pid_t) pidClient;
 
     //Send message
-    sendMessage(path, new->pid, "Request is waiting\n");
 
     const char s[2] = "$";
 
@@ -136,10 +135,11 @@ int runRequest(Request r, char * path) {
     }
     while (filtersMissing(r->filters)) pause();
     // O filho tem que ter o PID do pai, para quando acabar avisar este (PAI) que pode verificar se pode correr o request
+    sendMessage(path, r->pid, "Request is starting\n");
     
     if (changeFilter(r->filters, -1) < 0) {
         printf("The filters are invalid 1 [REQUEST.C]\n");
-    sendMessage(path, r->pid, "Invalid Request because of filters\n");
+        sendMessage(path, r->pid, "Invalid Request because of filters\n");
         return -1;
     }
 
@@ -156,7 +156,6 @@ int runRequest(Request r, char * path) {
         return -1;
     }
 
-    sendMessage(path, r->pid, "[DEBUG] Request is starting\n");
 
     int sizeFilter = getSize(*(r->filters));
 
@@ -277,3 +276,7 @@ int runRequest(Request r, char * path) {
     printf("Aumentou filtros\n");
     return 0;  //Fui eu que meti isto, o sujeito indefinido da frase é o Diogo
 }
+
+pid_t getPid(Request r) {
+    return r->pid;
+    }

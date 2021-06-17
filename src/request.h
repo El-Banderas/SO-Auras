@@ -11,3 +11,5 @@ int runRequest(Request r, char * path);
 void addFilter(char *filter);
 
 void sendStatus(char *path, int pidClient);
+
+pid_t getPid(Request r);

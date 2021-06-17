@@ -22,7 +22,7 @@ typedef struct {
     char **array;
     int used;
     int size;
-} ArrayChar; // METE COM * DIOGOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+} ArrayChar; 
 
 ArrayChar *initArrayChar(int initialSize);
 
