@@ -6,9 +6,11 @@
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
+#include <sys/wait.h>
 #include "request.h"
 #include "filters.h"
 
+int running = 1; // Variavel de status, para ver se o programa continua a receber pedidos
 
 int readConfig(char *path) {
     int fd = open(path, O_RDONLY);
@@ -33,8 +35,8 @@ int readConfig(char *path) {
 }
 
 void ctrl_c_handeler(int signum) {
-    printf("\n[DEBUG] - End of program by ctrl-C\n");
-    exit(0);
+    printf("\n[DEBUG] - Ending the program by ctrl-C\n");
+    running = 0;
 }
 
 
@@ -73,7 +75,7 @@ void loadClient(char *buffer) {
     //printf("Valores : %ld %ld %d \n", strlen(request), strlen(status), isStatus);
     if (isStatus == 6) sendStatus(path, pidClient);
     else {
-        //if (!fork()) {
+        if (!fork()) {
 
             struct Filters* safe =  duplicateFilters();
             Request r = createRequest(full, pidClient, path);
@@ -82,23 +84,24 @@ void loadClient(char *buffer) {
             printf("Quando o pedido é inválido\n");
             //Para ter os filtros como antes da execução.
             setFilters(safe); 
-            char clientFifo[40];
             
             sendMessage(path,getPid(r), "Request invalid\n");
             //O sleep existe para que haja tempo para escrever a mensagem
             sleep(2);
             kill(pidClient, SIGUSR2);
-        } else {
+        }
+         else {
             printf("Quando o pedido é VÁLIDO\n");
             sendMessage(path,getPid(r), "Done with sucess\n");
             //O sleep existe para que haja tempo para escrever a mensagem
             sleep(2);
 
             kill(pidClient, SIGUSR2);
+
+            
+            }
+            _exit(0);
         }
-        //    _exit(0);
-        //}
-        printf("\nPassouRun\n");
     }
 }
 
@@ -124,7 +127,7 @@ int main(int argc, char *argv[]) {
     int fifofd;
     int bytesRead = 0;
     char buffer[1024];
-    while (1) {
+    while (running) {
         //Lê pedidos do fico central
         if ((fifofd = open(pathCentralFIfo, O_RDONLY)) < 0) {
             perror("fifo not open\n");
@@ -142,5 +145,11 @@ int main(int argc, char *argv[]) {
         printf("[DEBUG]: End of one client\n");
         close(fifofd);
     }
+
+    pid_t pid;
+    while ((pid = wait(NULL)) > 0) printf("[DEBUG] Filho com o pid %d terminou!", pid);
+
+    unlink(pathCentralFIfo);
+
     return 0;
 }

@@ -32,7 +32,7 @@ int countDollars(char *buffer) {
     return res;
 }
 
-Request createRequest(char *buffer, int pidClient, char * path) {
+Request createRequest(char *buffer, int pidClient, char *path) {
     //sleep(10);
     int numArgs = countDollars(buffer);
     //Se tiver apenas 2 $ só tem $input$output$filtro$end\n
@@ -56,11 +56,11 @@ Request createRequest(char *buffer, int pidClient, char * path) {
     new->filters = initArrayChar(1);
 
     for (int i = 0; i < numArgs - 3; i++) {
-        char * pathOfFilter = toLook(strsep(&buffer, s));
+        char *pathOfFilter = toLook(strsep(&buffer, s));
         if (pathOfFilter) insertArrayChar(new->filters, pathOfFilter);
         else {
             printf("One of the filter has an incorrect name\n");
-        //      printf("request %s\n", buffer);
+            //      printf("request %s\n", buffer);
         }
     }
     //Verificar
@@ -95,7 +95,8 @@ void sendStatus(char *path, int pidClient) {
     sleep(2);
     kill(pidClient, SIGUSR2);
 }
-void sendMessage(char *path, int pidClient, char * message) {
+
+void sendMessage(char *path, int pidClient, char *message) {
     //Avisar o filho que vai começar
     kill(pidClient, SIGUSR1);
     //Abrir pipe privado
@@ -104,7 +105,8 @@ void sendMessage(char *path, int pidClient, char * message) {
     write(fd, message, strlen(message));
     close(fd);
 }
-int execFilter(char *filter) {
+
+int static execFilter(char *filter) {
     char *args[10];
     char *tmp = strtok(filter, " ");
 
@@ -125,7 +127,7 @@ int execFilter(char *filter) {
 }
 
 //O path é necessário para enviar a mensagem pelo fifo privado.
-int runRequest(Request r, char * path) {
+int runRequest(Request r, char *path) {
     //r -> filters = initArrayChar(1);
     //insertArrayChar(r -> filters, "aurrasd-gain-double");
     //insertArrayChar(r -> filters, "aurrasd-tempo-half");
@@ -136,12 +138,13 @@ int runRequest(Request r, char * path) {
     while (filtersMissing(r->filters)) pause();
     // O filho tem que ter o PID do pai, para quando acabar avisar este (PAI) que pode verificar se pode correr o request
     sendMessage(path, r->pid, "Request is starting\n");
-    
+
     if (changeFilter(r->filters, -1) < 0) {
         printf("The filters are invalid 1 [REQUEST.C]\n");
         sendMessage(path, r->pid, "Invalid Request because of filters\n");
         return -1;
     }
+    printf("Diminui filtros\n");
 
     int input = open(r->inputName, O_RDONLY);
     if (input == -1) {
@@ -203,7 +206,7 @@ int runRequest(Request r, char * path) {
 
                 dup2(input, 0);
                 close(input);
-                
+
                 execFilter(getArrayChar(r->filters, 0));
                 _exit(0); // Caso dê erro no exec
 
@@ -243,7 +246,7 @@ int runRequest(Request r, char * path) {
         }
 
         int n = sizeFilter - 1;
-            printf("Final part of excecution\n");
+        printf("Final part of excecution\n");
         switch (fork()) {
             case -1:
                 perror("fork");
@@ -265,18 +268,18 @@ int runRequest(Request r, char * path) {
                 close(output); // Fechar pipe de escrita
                 close(pipes[n - 1][0]); // Fechar pipe de leitura
         }
-            wait(NULL);
-        
+        wait(NULL);
+
     }
-    if (changeFilter(r->filters, 1) < 0) {
-            printf("The filters are invalid 2 [REQUEST.C]\n");
-            sendMessage(path, r->pid, "Invalid Request because of filters\n");
-        return -1;
-        }
     printf("Aumentou filtros\n");
-    return 0;  //Fui eu que meti isto, o sujeito indefinido da frase é o Diogo
+    if (changeFilter(r->filters, 1) < 0) {
+        printf("The filters are invalid 2 [REQUEST.C]\n");
+        sendMessage(path, r->pid, "Invalid Request because of filters\n");
+        return -1;
+    }
+    return 0;
 }
 
 pid_t getPid(Request r) {
     return r->pid;
-    }
+}

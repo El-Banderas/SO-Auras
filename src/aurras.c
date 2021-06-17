@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <fcntl.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
@@ -18,9 +17,8 @@ void ctrl_status(int signum) {
     int fdPrivateFifo;
     //printf("Path:'%s'\n", path);
     if ((fdPrivateFifo = open(path, O_RDONLY)) < 0) printf("private fifo not open\n");
-    //fdPrivateFifo = open(path, O_RDONLY);
-    else 
-    {
+        //fdPrivateFifo = open(path, O_RDONLY);
+    else {
         char buffer[1024];
         int bytesRead = 0;
         while ((bytesRead = read(fdPrivateFifo, buffer, 1024)) > 0) {

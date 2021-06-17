@@ -64,13 +64,8 @@ ArrayChar *toString() {
         char buffer[300];
         int total = getArrayInt((filters->maxFilters), i);
         int running = total - getArrayInt((filters->availableFilters), i);
-        sprintf(buffer, "Filter %s: %d / %d (runing/max)\n", getArrayChar((filters->filtersNames), i), running, total);
+        sprintf(buffer, "Filter %s: %d / %d (running/max)\n", getArrayChar((filters->filtersNames), i), running, total);
         insertArrayChar(toString, buffer);
-        /*
-        strcat(buffer, getArrayChar(filters->filtersNames));
-        strcat(buffer, ": ");
-        */
-        //       printf("To String %d %s\n", i, getArrayChar(&(filters->filtersNames), i));
     }
     //for (int i = 0; i < getSize(filters->filtersNames); i++) printf("%s", getArrayChar(toString, i));
     return toString;
