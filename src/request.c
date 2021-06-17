@@ -4,12 +4,13 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <string.h>
 #include <signal.h>
 #include "request.h"
 #include "filters.h"
 
-#define bin "aurrasd-filters"
+#define bin "bin/aurrasd-filters/aurrasd-echo"
 // <PID>.pipe
 
 
@@ -35,7 +36,7 @@ Request createRequest(char *buffer, int pidClient) {
     //sleep(10);
     int numArgs = countDollars(buffer);
     //Se tiver apenas 2 $ só tem $input$output$filtro$end\n
-    if (numArgs < 5) {
+    if (numArgs < 4) {
         printf("Pedido '%s' inválido\n", buffer);
         return NULL;
     }
@@ -51,7 +52,7 @@ Request createRequest(char *buffer, int pidClient) {
     new->outputName = strsep(&buffer, s);
     new->filters = initArrayChar(1);
 
-    for (int i = 0; i < numArgs - 4; i++) {
+    for (int i = 0; i < numArgs - 3; i++) {
         insertArrayChar(new->filters, strsep(&buffer, s));
         //      printf("request %s\n", buffer);
     }
@@ -63,15 +64,16 @@ Request createRequest(char *buffer, int pidClient) {
         printf("Filtro %d: %s | ", i, getArrayChar(new->filters, i));
     //Acorda processo filho, mas já?
     //Avisar o filho que vai começar
-    return NULL;
+    return new;
 }
+
 
 //Se não estiver a enviar, tirar o printf de comentário dentro do for
 //Não sei porque funciona, mas funciona
 void sendStatus(char *path, int pidClient) {
     //Avisar o filho que vai começar
     kill(pidClient, SIGUSR1);
-    //printf("Status is here\n");
+    printf("Status is been sent.\n");
     ArrayChar *convertedToString = toString();
     //Abrir pipe privado
     int fd = open(path, O_WRONLY);
@@ -82,6 +84,8 @@ void sendStatus(char *path, int pidClient) {
         write(fd, thisLine, strlen(thisLine));
     }
     close(fd);
+    sleep(3);
+    kill(pidClient, SIGUSR2);
 }
 
 int execCommand(char *command) {
@@ -102,7 +106,7 @@ int execCommand(char *command) {
 
 
 int runRequest(Request r) {
-    printf("Passou\n");
+    /*
     r = malloc(sizeof(struct Request));
     r->inputName = strdup("samples/sample-1-so.m4a");
     r->filters = initArrayChar(3);
@@ -110,6 +114,7 @@ int runRequest(Request r) {
     insertArrayChar(r->filters, "eco");
     insertArrayChar(r->filters, "rapido");
     r->outputName = "output.m4a";
+    */
 
     while (filtersMissing(r->filters)) pause();
     // O filho tem que ter o PID do pai, para quando acabar avisar este (PAI) que pode verificar se pode correr o request
@@ -137,21 +142,26 @@ int runRequest(Request r) {
         dup2(output, 1);
         close(input);
         close(output);
-
+        char c[100] = "bin/aurrasd-filters/aurrasd-echo";
+        strcat(strdup(c), getArrayChar(r->filters, 0));
         switch (fork()) {
             case -1:
                 perror("fork");
                 return -1;
 
             case 0:
-                execCommand(getArrayChar(r->filters, 0));
+                execCommand(c);
                 _exit(0);
 
+            default:
+                close(input);
+                wait(NULL);
+                close(output);
 
         }
         return 0;
     } else {
-        if (pipe(pipes[0])) {
+        if (pipe(pipes[0]) != 0) {
             perror("pipe");
             return -1;
         }
@@ -167,13 +177,14 @@ int runRequest(Request r) {
                 dup2(input, 0);
                 close(input);
                 dup2(pipes[0][1], 1);
-                close(pipes[0][1]);
                 printf("SemDeadLock\n");
+                close(pipes[0][1]);
                 execCommand(getArrayChar(r->filters, 0));
                 _exit(0); // Caso dê erro no exec
 
             default:
                 close(pipes[0][1]); // Fechar pipe de escrita
+                close(input);
 
         }
         for (int i = 1; i < sizeFilter - 1; i++) {

@@ -19,18 +19,15 @@ struct Filters {
 struct Filters *filters = NULL;
 
 
-int filtersMissing(ArrayChar* requestFilters){
-    for (int i = 0; i < getSize(*(filters->filtersNames)); i++){
-        for(int j = 0; j < getSize(*(requestFilters)); j++) {
+int filtersMissing(ArrayChar *requestFilters) {
+    for (int i = 0; i < getSize(*(filters->filtersNames)); i++) {
+        for (int j = 0; j < getSize(*(requestFilters)); j++) {
             if (!strcmp(getArrayChar((filters->filtersNames), i), getArrayChar(requestFilters, j))
-            && getArrayInt(filters->availableFilters, i) == 0) {
-                printf("Return 0\n");
+                && getArrayInt(filters->availableFilters, i) == 0)
                 return 1;
-            }
         }
 
     }
-    printf("Return 1\n");
     return 0;
 }
 
@@ -38,7 +35,7 @@ void initFilterStructur() {
     filters = malloc(sizeof(struct Filters));
     filters->filtersNames = initArrayChar(2);
     filters->filtersPath = initArrayChar(2);
-    
+
 
     filters->availableFilters = initArrayInt(2);
     filters->maxFilters = initArrayInt(2);
@@ -59,11 +56,11 @@ void addFilter(char *filter) {
 }
 
 // @Override
-ArrayChar * toString() {
-    ArrayChar * toString = initArrayChar(2);
+ArrayChar *toString() {
+    ArrayChar *toString = initArrayChar(2);
     insertArrayChar(toString, "Aqui inserem-se os requestes\n");
 
-    for (int i = 0; i < getSize(*(filters->filtersNames)); i++){
+    for (int i = 0; i < getSize(*(filters->filtersNames)); i++) {
         char buffer[300];
         int total = getArrayInt((filters->maxFilters), i);
         int running = total - getArrayInt((filters->availableFilters), i);
@@ -73,12 +70,12 @@ ArrayChar * toString() {
         strcat(buffer, getArrayChar(filters->filtersNames));
         strcat(buffer, ": ");
         */
- //       printf("To String %d %s\n", i, getArrayChar(&(filters->filtersNames), i));
+        //       printf("To String %d %s\n", i, getArrayChar(&(filters->filtersNames), i));
     }
     //for (int i = 0; i < getSize(filters->filtersNames); i++) printf("%s", getArrayChar(toString, i));
     return toString;
 }
 
-ArrayChar* getFiltersNames(){
+ArrayChar *getFiltersNames() {
     return filters->filtersNames;
 }
