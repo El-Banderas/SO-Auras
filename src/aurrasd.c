@@ -74,7 +74,8 @@ void loadClient(char *buffer) {
     if (isStatus == 6) sendStatus(path, pidClient);
     else {
         //if (!fork()) {
-        if (runRequest(createRequest(full, pidClient)) == -1) {
+            Request r = createRequest(full, pidClient, path);
+        if (!r && runRequest(r,path ) == -1) {
             char clientFifo[40];
             sprintf(clientFifo, "tmp/%d.pipe", pidClient);
             kill(pidClient, SIGUSR1);
@@ -84,6 +85,7 @@ void loadClient(char *buffer) {
             close(fd);
             kill(pidClient, SIGUSR2);
         } else {
+    printf("CREATE REQUEST! T\n");
             kill(pidClient, SIGUSR1);
             int fd = open(path, O_WRONLY);
             char *msg = "Done";

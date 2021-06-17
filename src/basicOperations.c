@@ -27,6 +27,13 @@ int getArrayInt(ArrayInt *a, int pos) {
     return a->array[pos];
 }
 
+void changeArrayInt(ArrayInt *a, int pos, int toSum) {
+    //printf("X == //  %d <  %d\n",   a->used, pos);
+    if (a->used < pos) return;
+    //printf("GetArrayChar %s \n", a->array[-1 + (a->used)]);
+     a->array[pos] = toSum+ a->array[pos];
+}
+
 void insertArrayInt(ArrayInt *a, int element) {
     if (a->used == a->size) {
         a->size *= 2;

@@ -21,7 +21,7 @@ struct Request {
     char *inputName;
     char *outputName;
 
-    ArrayChar *filters;
+    ArrayChar *filters; //Path
 };
 
 int countDollars(char *buffer) {
@@ -32,7 +32,7 @@ int countDollars(char *buffer) {
     return res;
 }
 
-Request createRequest(char *buffer, int pidClient) {
+Request createRequest(char *buffer, int pidClient, char * path) {
     //sleep(10);
     int numArgs = countDollars(buffer);
     //Se tiver apenas 2 $ só tem $input$output$filtro$end\n
@@ -43,9 +43,13 @@ Request createRequest(char *buffer, int pidClient) {
     buffer = &buffer[1];
     struct Request *new = malloc(sizeof(struct Request));
     new->pid = (pid_t) pidClient;
+
+    //Send message
+    sendMessage(path, new->pid, "Request is waiting\n");
+
     const char s[2] = "$";
 
-    char *lixo = strsep(&buffer, s);
+    strsep(&buffer, s);
     new->inputName = strsep(&buffer, s);
     //printf("2: %s\n", s1);
 
@@ -53,15 +57,20 @@ Request createRequest(char *buffer, int pidClient) {
     new->filters = initArrayChar(1);
 
     for (int i = 0; i < numArgs - 3; i++) {
-        insertArrayChar(new->filters, strsep(&buffer, s));
+        char * pathOfFilter = toLook(strsep(&buffer, s));
+        if (pathOfFilter) insertArrayChar(new->filters, pathOfFilter);
+        else {
+            printf("One of the filter has an incorrect name\n");
         //      printf("request %s\n", buffer);
+        }
     }
     //Verificar
-    printf("O request criado é: \n");
+    printf("Request information: \n");
     printf("InputName: %s\n", new->inputName);
     printf("OutputName: %s\n", new->outputName);
     for (int i = 0; i < getSize(*(new->filters)); i++)
-        printf("Filtro %d: %s | ", i, getArrayChar(new->filters, i));
+        printf("FiltroPath %d: %s | ", i, getArrayChar(new->filters, i));
+    printf("\n");
     //Acorda processo filho, mas já?
     //Avisar o filho que vai começar
     return new;
@@ -84,10 +93,18 @@ void sendStatus(char *path, int pidClient) {
         write(fd, thisLine, strlen(thisLine));
     }
     close(fd);
-    sleep(3);
+    sleep(2);
     kill(pidClient, SIGUSR2);
 }
-
+void sendMessage(char *path, int pidClient, char * message) {
+    //Avisar o filho que vai começar
+    kill(pidClient, SIGUSR1);
+    //Abrir pipe privado
+    int fd = open(path, O_WRONLY);
+    //if ((fd = open(path, O_WRONLY)) < 0) perror("fifo load client not open\n");
+    write(fd, message, strlen(message));
+    close(fd);
+}
 int execFilter(char *filter) {
     char *args[10];
     char *tmp = strtok(filter, " ");
@@ -108,21 +125,30 @@ int execFilter(char *filter) {
     return ret;
 }
 
-
-int runRequest(Request r) {
-    r -> filters = initArrayChar(1);
-    insertArrayChar(r -> filters, "aurrasd-tempo-half");
-    insertArrayChar(r -> filters, "aurrasd-gain-double");
-
+//O path é necessário para enviar a mensagem pelo fifo privado.
+int runRequest(Request r, char * path) {
+    //r -> filters = initArrayChar(1);
+    //insertArrayChar(r -> filters, "aurrasd-gain-double");
+    //insertArrayChar(r -> filters, "aurrasd-tempo-half");
+    if ((getSize(*(r->filters))) < 1) {
+        printf("Request not valid\n");
+        return -1;
+    }
     while (filtersMissing(r->filters)) pause();
     // O filho tem que ter o PID do pai, para quando acabar avisar este (PAI) que pode verificar se pode correr o request
-
+    
+    if (changeFilter(r->filters, -1) < 0) {
+        printf("The filters are invalid 1 [REQUEST.C]\n");
+    sendMessage(path, r->pid, "Invalid Request because of filters\n");
+        return -1;
+    }
 
     int input = open(r->inputName, O_RDONLY);
     if (input == -1) {
         perror("open");
         return -1;
     }
+    printf("The input is: %d\n", input);
 
     int output = open(r->outputName, O_WRONLY | O_CREAT, 0666);
     if (output == -1) {
@@ -130,6 +156,7 @@ int runRequest(Request r) {
         return -1;
     }
 
+    sendMessage(path, r->pid, "[DEBUG] Request is starting\n");
 
     int sizeFilter = getSize(*(r->filters));
 
@@ -171,13 +198,13 @@ int runRequest(Request r) {
                 close(pipes[0][0]); // Fechar pipe de leitura
 
                 // Redirecionar o stdout e o stdin para o pipe para o primeiro filtro
-                printf("[DEBUG] DeadLock?\n");
+                dup2(pipes[0][1], 1);
+                //printf("[DEBUG] SemDeadLockInput\n");
+                close(pipes[0][1]);
+
                 dup2(input, 0);
                 close(input);
-                printf("[DEBUG] SemDeadLockInput\n");
-                dup2(pipes[0][1], 1);
-                close(pipes[0][1]);
-                printf("[DEBUG] SemDeadLockPipe\n");
+                
                 execFilter(getArrayChar(r->filters, 0));
                 _exit(0); // Caso dê erro no exec
 
@@ -187,7 +214,6 @@ int runRequest(Request r) {
                 close(input);
 
         }
-        printf("[DEBUG] Pai passou por aqui\n");
         for (int i = 1; i < sizeFilter - 1; i++) {
             if (pipe(pipes[i])) {
                 perror("pipe");
@@ -218,13 +244,14 @@ int runRequest(Request r) {
         }
 
         int n = sizeFilter - 1;
+            printf("Final part of excecution\n");
         switch (fork()) {
             case -1:
                 perror("fork");
                 return -1;
 
             case 0:
-                close(pipes[n - 1][0]); // Fechar pipe de leitura
+                //close(pipes[n - 1][0]); // Fechar pipe de leitura
 
                 // Redirecionar o stdout e o stdin para o pipe para o primeiro filtro
                 dup2(pipes[n - 1][0], 0);
@@ -240,6 +267,13 @@ int runRequest(Request r) {
                 close(pipes[n - 1][0]); // Fechar pipe de leitura
         }
             wait(NULL);
+        
     }
-    return -1;  //Fui eu que meti isto, o sujeito indefinido da frase é o Diogo
+    if (changeFilter(r->filters, 1) < 0) {
+            printf("The filters are invalid 2 [REQUEST.C]\n");
+            sendMessage(path, r->pid, "Invalid Request because of filters\n");
+        return -1;
+        }
+    printf("Aumentou filtros\n");
+    return 0;  //Fui eu que meti isto, o sujeito indefinido da frase é o Diogo
 }

@@ -1,10 +1,12 @@
 
 typedef struct Request *Request;
 
+//Send message to client.
+void sendMessage(char *path, int pidClient, char * message);
 
-Request createRequest(char *buffer, int pidClient);
+Request createRequest(char *buffer, int pidClient, char * path);
 
-int runRequest(Request r);
+int runRequest(Request r, char * path);
 
 void addFilter(char *filter);
 

@@ -16,6 +16,8 @@ int getArrayInt(ArrayInt *a, int pos);
 
 void freeArrayInt(ArrayInt *a);
 
+void changeArrayInt(ArrayInt *a, int pos, int toSum);
+
 typedef struct {
     char **array;
     int used;

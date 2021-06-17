@@ -12,3 +12,8 @@ ArrayChar *toString();
 ArrayChar *getFiltersNames();
 
 int filtersMissing(ArrayChar *filters);
+
+ArrayChar *getFiltersNames();
+
+char *toLook(char * toLook);
+int changeFilter(ArrayChar* listUsedFilters, int change);

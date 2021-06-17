@@ -13,23 +13,25 @@ O cliente espera que o servidor crie o fifo privado (1 para 1), e depois começa
 */
 void ctrl_status(int signum) {
     char privateFifo[40];
-    printf("Recebi o sinal\n");
     sprintf(privateFifo, "tmp/%d.pipe$\n", getpid());
     char *path = strtok(privateFifo, "$");
     int fdPrivateFifo;
-    printf("Path:'%s'\n", path);
+    //printf("Path:'%s'\n", path);
     if ((fdPrivateFifo = open(path, O_RDONLY)) < 0) printf("private fifo not open\n");
     //fdPrivateFifo = open(path, O_RDONLY);
-    char buffer[1024];
-    int bytesRead = 0;
-    while ((bytesRead = read(fdPrivateFifo, buffer, 1024)) > 0) {
-        write(1, buffer, bytesRead);
+    else 
+    {
+        char buffer[1024];
+        int bytesRead = 0;
+        while ((bytesRead = read(fdPrivateFifo, buffer, 1024)) > 0) {
+            write(1, buffer, bytesRead);
+        }
     }
     //exit(0);
 }
 
 void ctrl_filter(int signum) {
-    printf("Nothing to do, bye bye\n");
+    printf("Client is exiting\n");
     exit(0);
 }
 

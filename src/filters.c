@@ -79,3 +79,24 @@ ArrayChar *toString() {
 ArrayChar *getFiltersNames() {
     return filters->filtersNames;
 }
+
+char *toLook(char * toLook) {
+    for (int i = 0; i < getSize(*(filters->filtersNames)); i++) {
+        //Se o nome for igual ao que está na lista, ele copia o path
+        if (!strcmp(toLook,getArrayChar(filters->filtersNames, i))) return strdup(getArrayChar(filters->filtersPath, i));
+    }
+    return NULL;
+}
+
+int changeFilter(ArrayChar* listUsedFilters, int change){
+    for (int i = 0; i < getSize(*(filters->filtersPath)); i++) {
+        for (int j = 0; j < getSize(*(listUsedFilters)); j++) {
+            if (!strcmp(getArrayChar((filters->filtersPath), i), getArrayChar(listUsedFilters, j))) {
+                if (getArrayInt(filters->availableFilters, i) <= 0 && change < 0) return -1; 
+                changeArrayInt(filters->availableFilters, i, change);
+            }
+        }
+
+    }
+    return 0;
+}

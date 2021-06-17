@@ -6,7 +6,7 @@ O servidor coordena os vários pedidos dos clientes, o seu funcionamento será e
 
 Estrutura do programa
 
-Quando o servidor é ligado, ele inicializa uma estrutura com os vários filtros disponíveis, a partir do ficheiro config, utilizando a função "readConfig". Esta estrutura com os filtros disponíveis para execução é armazenada numa variável global, para que os processos concorrentes saibam se podem usar os filtros ou não.
+Quando o servidor é ligado, ele inicializa uma estrut   ura com os vários filtros disponíveis, a partir do ficheiro config, utilizando a função "readConfig". Esta estrutura com os filtros disponíveis para execução é armazenada numa variável global, para que os processos concorrentes saibam se podem usar os filtros ou não.
 Posteriormente, é criado um pipe com nome na pasta tmp, chamado "centralFifo", e cujo nome os clientes também conhecem. É a partir deste "centralFifo" que os clientes enviam os seus pedidos. Os pedidos começam com o número do processo do cliente, e comandos, com "$" entre eles.
 A seguir, o servidor espera que algum cliente escreva pedidos no "centralFifo", e chama a função "loadClient" para processar o pedido. Se o pedido for correto, se existirem os filtros pedidos, o programa averigua se existem filtros disponíveis para poder executar o mmpeg, caso contrário espera que fiquem livres. Esta não é uma espera ativa, porque seria demasiado custosa. Nós decidimos usar a função "pause" para que quando hajam filtros disponíveis o programa continue. Quando se torna possível, usamos o comando execlp para aplicar os filtros.
 
