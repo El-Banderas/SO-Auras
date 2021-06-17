@@ -31,7 +31,7 @@ void ctrl_status(int signum) {
 }
 
 void ctrl_filter(int signum) {
-    printf("Client is exiting\n");
+    printf("Signal to end\n");
     exit(0);
 }
 

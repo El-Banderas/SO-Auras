@@ -100,3 +100,17 @@ int changeFilter(ArrayChar* listUsedFilters, int change){
     }
     return 0;
 }
+struct Filters* duplicateFilters(){
+    struct Filters* new = malloc(sizeof(struct Filters));
+    new->filtersNames =  duplicateArrayChar(filters->filtersNames);
+    new->filtersPath =  duplicateArrayChar(filters->filtersPath);
+
+
+    new->availableFilters = duplicateArrayInt(filters->availableFilters);
+    new->maxFilters =duplicateArrayInt(filters->maxFilters) ;
+    return new;
+}
+
+void setFilters(struct Filters* toReplace){
+    filters = toReplace;
+}

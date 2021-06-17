@@ -17,3 +17,7 @@ ArrayChar *getFiltersNames();
 
 char *toLook(char * toLook);
 int changeFilter(ArrayChar* listUsedFilters, int change);
+
+
+struct Filters* duplicateFilters();
+void setFilters(struct Filters* toReplace);

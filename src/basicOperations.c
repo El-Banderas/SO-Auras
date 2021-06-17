@@ -42,10 +42,18 @@ void insertArrayInt(ArrayInt *a, int element) {
     a->array[a->used++] = element;
 }
 
+
+
 void freeArrayInt(ArrayInt *a) {
     free(a->array);
     a->array = NULL;
     a->used = a->size = 0;
+}
+
+ArrayInt * duplicateArrayInt(ArrayInt * a){
+    ArrayInt *res = initArrayInt(a->used);
+   for (int i = 0; i < a->used; i++) insertArrayInt(res, a->array[i]);
+   return res; 
 }
 
 // ----------------------  Array of chars ------------------------
@@ -92,6 +100,11 @@ void freeArrayChar(ArrayChar *a) {
     a->used = a->size = 0;
 }
 
+ArrayChar * duplicateArrayChar(ArrayChar * a){
+    ArrayChar *res = initArrayChar(a->used);
+   for (int i = 0; i < a->used; i++) insertArrayChar(res, strdup(a->array[i]));
+   return res; 
+}
 //---------------------- Read files --------------
 ssize_t readln(int fd, char *line, size_t size) {
     ssize_t i = 0;
@@ -102,3 +115,4 @@ ssize_t readln(int fd, char *line, size_t size) {
     line[i++] = '\n';
     return i;
 }
+

@@ -74,23 +74,26 @@ void loadClient(char *buffer) {
     if (isStatus == 6) sendStatus(path, pidClient);
     else {
         //if (!fork()) {
+
+            struct Filters* safe =  duplicateFilters();
             Request r = createRequest(full, pidClient, path);
             sendMessage(path,getPid(r), "Pending...\n");
         if ( runRequest(r,path ) == -1) {
+            printf("Quando o pedido é inválido\n");
+            //Para ter os filtros como antes da execução.
+            setFilters(safe); 
             char clientFifo[40];
-            sprintf(clientFifo, "tmp/%d.pipe", pidClient);
-            kill(pidClient, SIGUSR1);
-            int fd = open(clientFifo, O_WRONLY);
-            char *err = "Erro!\n";
-            write(fd, err, strlen(err));
-            close(fd);
+            
+            sendMessage(path,getPid(r), "Request invalid\n");
+            //O sleep existe para que haja tempo para escrever a mensagem
+            sleep(2);
             kill(pidClient, SIGUSR2);
         } else {
-            kill(pidClient, SIGUSR1);
-            int fd = open(path, O_WRONLY);
-            char *msg = "Done";
-            write(fd, msg, strlen(msg));
-            close(fd);
+            printf("Quando o pedido é VÁLIDO\n");
+            sendMessage(path,getPid(r), "Done with sucess\n");
+            //O sleep existe para que haja tempo para escrever a mensagem
+            sleep(2);
+
             kill(pidClient, SIGUSR2);
         }
         //    _exit(0);

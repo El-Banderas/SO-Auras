@@ -18,6 +18,8 @@ void freeArrayInt(ArrayInt *a);
 
 void changeArrayInt(ArrayInt *a, int pos, int toSum);
 
+ArrayInt * duplicateArrayInt(ArrayInt * a);
+
 typedef struct {
     char **array;
     int used;
@@ -35,3 +37,5 @@ ssize_t readln(int fd, char *line, size_t size);
 char *getArrayChar(ArrayChar *a, int pos);
 
 int getSize(ArrayChar a);
+
+ArrayChar * duplicateArrayChar(ArrayChar * a);
