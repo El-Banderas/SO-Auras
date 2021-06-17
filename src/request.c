@@ -132,6 +132,7 @@ int runRequest(Request r, char *path) {
     //insertArrayChar(r -> filters, "aurrasd-gain-double");
     //insertArrayChar(r -> filters, "aurrasd-tempo-half");
     if ((getSize(*(r->filters))) < 1) {
+        sendMessage(path, r->pid, "Invalid Request because of number of filters\n");
         printf("Request not valid\n");
         return -1;
     }
@@ -151,7 +152,6 @@ int runRequest(Request r, char *path) {
         perror("open");
         return -1;
     }
-    printf("The input is: %d\n", input);
 
     int output = open(r->outputName, O_WRONLY | O_CREAT, 0666);
     if (output == -1) {

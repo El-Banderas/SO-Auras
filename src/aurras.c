@@ -30,6 +30,10 @@ void ctrl_status(int signum) {
 
 void ctrl_filter(int signum) {
     printf("Signal to end\n");
+    char privateFifo[40];
+    sprintf(privateFifo, "tmp/%d.pipe$\n", getpid());
+    char *path = strtok(privateFifo, "$");
+    unlink(path);
     exit(0);
 }
 
