@@ -173,22 +173,28 @@ int runRequest(Request r) {
                 close(pipes[0][0]); // Fechar pipe de leitura
 
                 // Redirecionar o stdout e o stdin para o pipe para o primeiro filtro
-
-                printf("DeadLock?\n");
-                dup2(pipes[0][1], 1);
-                printf("SemDeadLock\n");
-                close(pipes[0][1]);
+                printf("[DEBUG] DeadLock?\n");
                 dup2(input, 0);
+                printf("[DEBUG] SemDeadLockInput\n");
+                dup2(pipes[0][1], 1);
+                printf("[DEBUG] SemDeadLockPipe\n");
+                close(pipes[0][1]);
                 close(input);
                 execCommand(path);
                 _exit(0); // Caso dê erro no exec
 
             default:
                 close(pipes[0][1]); // Fechar pipe de escrita
+                wait(NULL);
                 close(input);
 
         }
+        printf("[DEBUG] Pai passou por aqui\n");
         for (int i = 1; i < sizeFilter - 1; i++) {
+            if (pipe(pipes[i])) {
+                perror("pipe");
+                return -1;
+            }
             path = strdup(c);
             strcat(path, getArrayChar(r->filters, i));
             printf("[DEBUG] Path exec: %s %d\n", path, i);
