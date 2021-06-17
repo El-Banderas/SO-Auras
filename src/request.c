@@ -106,10 +106,14 @@ int execCommand(char *command) {
 
 
 int runRequest(Request r) {
+    r -> filters = initArrayChar(1);
+    insertArrayChar(r -> filters, "aurrasd-tempo-half");
+    insertArrayChar(r -> filters, "aurrasd-gain-double");
+
     while (filtersMissing(r->filters)) pause();
     // O filho tem que ter o PID do pai, para quando acabar avisar este (PAI) que pode verificar se pode correr o request
 
-    char c[100] = "bin/aurrasd-filters/";
+    const char c[100] = "bin/aurrasd-filters/";
 
     int input = open(r->inputName, O_RDONLY);
     if (input == -1) {
@@ -134,14 +138,15 @@ int runRequest(Request r) {
         dup2(output, 1);
         close(input);
         close(output);
-        strcat(c, getArrayChar(r->filters, 0));
+        char *path = strdup(c);
+        strcat(path, getArrayChar(r->filters, 0));
         switch (fork()) {
             case -1:
                 perror("fork");
                 return -1;
 
             case 0:
-                execCommand(c);
+                execCommand(path); // "bin/aurrasd-filters/aurrasd-gain-half"
                 _exit(0);
 
             default:
@@ -156,7 +161,9 @@ int runRequest(Request r) {
             perror("pipe");
             return -1;
         }
-        strcat(strdup(c), getArrayChar(r->filters, 0));
+        char *path = strdup(c);
+        strcat(path, getArrayChar(r->filters, 0));
+        printf("[DEBUG] Path exec: %s\n", path);
         switch (fork()) {
             case -1:
                 perror("fork");
@@ -166,12 +173,14 @@ int runRequest(Request r) {
                 close(pipes[0][0]); // Fechar pipe de leitura
 
                 // Redirecionar o stdout e o stdin para o pipe para o primeiro filtro
-                dup2(input, 0);
-                close(input);
+
+                printf("DeadLock?\n");
                 dup2(pipes[0][1], 1);
                 printf("SemDeadLock\n");
                 close(pipes[0][1]);
-                execCommand(getArrayChar(r->filters, 0));
+                dup2(input, 0);
+                close(input);
+                execCommand(path);
                 _exit(0); // Caso dê erro no exec
 
             default:
@@ -180,7 +189,9 @@ int runRequest(Request r) {
 
         }
         for (int i = 1; i < sizeFilter - 1; i++) {
-            strcat(strdup(c), getArrayChar(r->filters, i));
+            path = strdup(c);
+            strcat(path, getArrayChar(r->filters, i));
+            printf("[DEBUG] Path exec: %s %d\n", path, i);
             switch (fork()) {
                 case -1:
                     perror("fork");
@@ -195,7 +206,7 @@ int runRequest(Request r) {
                     dup2(pipes[i][1], 1);
                     close(pipes[i][1]);
 
-                    execCommand(getArrayChar(r->filters, i));
+                    execCommand(c);
                     _exit(0); // Caso dê erro no exec
 
                 default:
@@ -206,7 +217,9 @@ int runRequest(Request r) {
         }
 
         int n = sizeFilter - 1;
-        strcat(strdup(c), getArrayChar(r->filters, n));
+        path = strdup(c);
+        strcat(path, getArrayChar(r->filters, n));
+        printf("[DEBUG] Path exec: %s\n", path);
         switch (fork()) {
             case -1:
                 perror("fork");
@@ -221,7 +234,7 @@ int runRequest(Request r) {
                 dup2(output, 1);
                 close(output);
 
-                execCommand(getArrayChar(r->filters, n));
+                execCommand(c);
                 _exit(0); // Caso dê erro no exec
 
             default:
@@ -230,6 +243,10 @@ int runRequest(Request r) {
         }
 
         return 0;
+
+        for (int i = 0; i < sizeFilter; i++) {
+            wait(NULL);
+        }
     }
     return -1;  //Fui eu que meti isto, o sujeito indefinido da frase é o Diogo
 }

@@ -51,7 +51,7 @@ void loadClient(char *buffer) {
 
     sprintf(privateFifo, "tmp/%d.pipe$", pidClient);
     char *path = strtok(privateFifo, "$");
-    //mkfifo(path, 0644);
+    mkfifo(path, 0644);
 
     //int fd;
     printf("\nPath:'%s'\n", path);
@@ -74,23 +74,23 @@ void loadClient(char *buffer) {
     if (isStatus == 6) sendStatus(path, pidClient);
     else {
         //if (!fork()) {
-            if (runRequest(createRequest(full, pidClient)) == -1) {
-                char clientFifo[40];
-                sprintf(clientFifo, "tmp/%d.pipe", pidClient);
-                kill(pidClient, SIGUSR1);
-                int fd = open(clientFifo, O_WRONLY);
-                char *err = "Erro!\n";
-                write(fd, err, strlen(err));
-                close(fd);
-                kill(pidClient, SIGUSR2);
-            } else {
-                kill(pidClient, SIGUSR1);
-                int fd = open(path, O_WRONLY);
-                char *msg = "Done";
-                write(fd, msg, strlen(msg));
-                close(fd);
-                kill(pidClient, SIGUSR2);
-            }
+        if (runRequest(createRequest(full, pidClient)) == -1) {
+            char clientFifo[40];
+            sprintf(clientFifo, "tmp/%d.pipe", pidClient);
+            kill(pidClient, SIGUSR1);
+            int fd = open(clientFifo, O_WRONLY);
+            char *err = "Erro!\n";
+            write(fd, err, strlen(err));
+            close(fd);
+            kill(pidClient, SIGUSR2);
+        } else {
+            kill(pidClient, SIGUSR1);
+            int fd = open(path, O_WRONLY);
+            char *msg = "Done";
+            write(fd, msg, strlen(msg));
+            close(fd);
+            kill(pidClient, SIGUSR2);
+        }
         //    _exit(0);
         //}
         printf("\nPassouRun\n");
